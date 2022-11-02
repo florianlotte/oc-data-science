@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>PROJET 3</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <img src="./img/logo_openclassrooms.svg" alt="openclassrooms logo" style="height: 180px; margin: 0 auto 1rem auto; background: transparent;" class="logo">
+                <h4>Data Scientist # Projet Santé</h4>
+                <h4>Concevez une application au service de la santé publique</h4>
+                <p>
+                    <small>Florian LOTTE</small>
+                </p>
+            </section>
+            <section>
+                <img data-src="./img/profile picture.png" alt="profile picture" style="height: 200px; width: 200px; border-radius: 50%; float: right" class="logo">
+                <h3 style="text-align: left;">Florian LOTTE</h3>
+                <p style="text-align: left; font-size: 0.8em;">10 ans d'experience en développement</p>
+                <ul style="display: block; text-align: left; margin: 0 0 0 1em; font-size: 0.8em;">
+                    <li>Développeur embarqué C++/Java (6 ans)</li>
+                    <li>Développeur backend Python (2 ans)</li>
+                    <li>Développeur blockchain IOT Scala (1 an)</li>
+                </ul>
+            </section>
+            <section>
+                <h3>Problématique</h3>
+                <blockquote style="font-size: 0.7em; display: flex; width: 80%; padding: 20px">
+					<p>L'agence "Santé publique France" a lancé <b>un appel à projets pour trouver des idées innovantes d’applications en lien avec l'alimentation</b></p>
+					<img data-src="./img/Sante-publique-France-logo.svg" alt="profile picture" style="height: 150px; width: 150px; border-radius: 15%; background-color: white; padding: 10px; margin: 10px; flex: 20%;" class="logo">
+                </blockquote>
+                <ul style="font-size: 0.7em;">
+                    <li>A l'aide des données <b>Open Food Facts</b> :</li>
+                    <ul>
+                        <li>Analyser les données en les nettoyant et en utilisant celle qui sont pertinentes pour l'application</li>
+                        <li>Produire des visualisations</li>
+                        <li>Réaliser des hypothèses de travail justifiés</li>
+                    </ul>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Jeu de données</h3>
+                    <p>Données colaboratives Open Food Facts</p>
+                    <ul style="font-size: 0.7em;">
+                        <li>en.openfoodfacts.org.products.csv</li>
+						<li>~4.5go</li>
+                        <li><b>187 colonnes</b></li>
+                        <li><b>2,057,108 lignes</b></li>
+                        <li>Taux de remplissage très variable !</li>
+                    </ul>
+                </section>
+			</section>
+			<section>
+				<section>
+					<h3>Nettoyage et hypothèses</h3>
+					<p style="font-size: 0.7em;">Voir 
+					<a href="./PSanté_01_notebooknettoyage.slides.html" target="_blank">PSanté_01_notebooknettoyage.slides.html</a>
+					</p>
+				</section>
+				<section>
+					<h3>Synthèse des hypothèses</h3>
+					<ul style="font-size: 0.7em;">
+                        <li>Suppression des colonnes à 80% vide ou plus</li>
+                        <li>Gader uniquement les produits dont les ingrédients sont renseignés</li>
+                        <li>Suppression des colonnes jugés inutiles</li>
+                        <li>Normalisation des données textuelles</li>
+						<li>Nettoyage des colonnes redondantes</li>
+						<li>Nettoyage des erreurs de formatage des categories</li>
+						<li>Nettoyage des outliers</li>
+						<li>Nettoyage des valeurs hors intervalle</li>
+						<li>Identification des boissons, matières grasses et frommages</li>
+						<li>Completer les données manquantes</li>
+						<ul>
+							<li>Par KNeighborsRegressor</li>
+							<li>Par la mediane pour les produits de même catégorie</li>
+						</ul>
+						<li>Calcul des nutriscores manquant</li>
+						<li>Suppression des doublons</li>
+                    </ul>
+				</section>
+				<section>
+					<h3>Détails du jeu de données nettoyé</h3>
+					<ul style="font-size: 0.7em;">
+						<li>clean.en.openfoodfacts.org.products.csv</li>
+                        <li>~420mo</li>
+                        <li>30 colonnes</li>
+						<ul>
+							<li>code et nom des produits</li>
+							<li>catégories</li>
+							<li>ingrédients</li>
+							<li>quantités pour 100g de produit (necessaire pour le nutriscore)</li>
+							<li>scores (nutri-score, nova-score)</li>
+						</ul>
+						<li>731,966 lignes</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<section>
+					<h3>Exploration et application</h3>
+					<p style="font-size: 0.7em;">Voir 
+					<a href="./PSanté_02_notebookexploration.slides.html" target="_blank">PSanté_02_notebookexploration.slides.html</a>
+					</p>
+				</section>
+				<section>
+					<h3>Synthèse des analyses</h3>
+					<ul style="font-size: 0.7em;">
+						<li>Réalisation de Wordclouds sur les categories et ingredients</li>
+                        <li>Analyse bivarié et multivarié des quantités</li>
+                        <li>Analyse multivarié par catégories</li>
+						<li>Analyse de la complexité des produits grâce aux ingredients</li>
+						<li>Analyse par composantes principales des quantités</li>
+						<li>Réalisation d'une application avec un score</li>
+						<li>Analyse par ANOVA de la pertinence du score</li>
+					</ul>
+				</section>
+				<section>
+					<h3>Desciption de l'application</h3>
+					<p><b>Vegan-Score</b></p>
+					<img data-src="./img/score2.svg" alt="profile picture" style="height: 100px; width: 200px; border-radius: 15px" class="logo">
+					</br><p style="font-size: 0.7em;">Ce score est un indicateur de présence d'ingredients d'origine animale</p>
+					<p style="font-size: 0.7em;">A - Aucun d'ingrédient d'origine animale</p>
+					<p style="font-size: 0.7em;">E - Beaucoup d'ingrédients d'origine animale</p>
+				</section>
+			</section>
+			<section>
+				<img data-src="./img/questions.png"/>
+			</section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js "></script>
+    <script src="plugin/notes/notes.js "></script>
+    <script src="plugin/markdown/markdown.js "></script>
+    <script src="plugin/highlight/highlight.js "></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>

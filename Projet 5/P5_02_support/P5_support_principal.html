@@ -1,0 +1,759 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>PROJET 5</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+    <!-- C3 Chart -->
+    <link rel="stylesheet" href="plugin/chart/c3.min.css">
+    <style type="text/css">
+        .c3 {
+            background-color: white;
+            font-size: 0.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <img src="./img/logo_openclassrooms.svg" alt="openclassrooms logo" style="height: 240px; margin: 0 auto 1rem auto; background: transparent;" class="logo">
+                <h3>Data Scientist # Projet 5</h3>
+                <h3>Segmentez des clients d'un site e-commerce</h3>
+                <p>Florian LOTTE</p>
+            </section>
+            <section>
+                <ul>
+                    <li><b>Présentation (20 minutes)</b></li>
+                    <ul>
+                        <li>Présentation de la problématique, du cleaning effectué, du feature engineering et de l'exploration – <b>5 min</b></li>
+                        <li>Présentation des différentes pistes de modélisation effectuées et du modèle final sélectionné – <b>10 min</b></li>
+                        <li>Présentation de la simulation pour définir le délai de maintenance du modèle (contrat de maintenance) – <b>5 min</b></li>
+                    </ul>
+                    <li><b>Discussion (5 minutes)</b></li>
+                    <ul>
+                        <li>L’évaluateur vous challengera sur vos choix</li>
+                    </ul>
+                    <li><b>Débriefing (5 minutes)</b></li>
+                    <ul>
+                        <li>À la fin de la soutenance, vous pourrez débriefer ensemble</li>
+                    </ul>
+                </ul>
+            </section>
+            <section>
+                <img data-src="./img/profile picture.png" alt="profile picture" style="height: 400px; width: 400px; border-radius: 50%; float: right; margin-right: 1rem;" class="logo">
+                <h3 style="text-align: left;">Florian LOTTE</h3>
+                <p style="text-align: left;">10 ans d'experience en développement</p>
+                <ul style="display: block; text-align: left; margin: 0 0 0 1em;">
+                    <li>Développeur embarqué C++/Java (6 ans)</li>
+                    <li>Développeur backend Python (2 ans)</li>
+                    <li>Développeur blockchain IOT Scala (1 an)</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Problématique</h3>
+                    <blockquote style="width: 100%;">
+                        <p>
+                            <b>Olist</b> souhaite que vous fournissiez à ses équipes d'e-commerce une <b>segmentation
+                                des clients</b> qu’elles pourront utiliser au quotidien pour leurs campagnes de communication.
+                            <p />
+                            <p>
+                                Votre objectif est de <b>comprendre les différents types d’utilisateurs</b> grâce à leur comportement et à leurs données personnelles.
+                                <p />
+                            </p>
+                            Vous devrez <b>fournir à l’équipe marketing une description actionable</b> de votre segmentation et de sa logique sous-jacente pour une utilisation optimale, ainsi qu’une <b>proposition de
+                            contrat de maintenance</b> basée sur une analyse de la stabilité des segments au cours du temps.
+                        </p>
+                    </blockquote>
+                </section>
+                <section>
+                    <ul>
+                        <li>Réaliser une courte analyse exploratoire</li>
+                        <li>Tester différents modèles non supervisées afin de regrouper des clients de profils similaires
+                        </li>
+                        <li>Ces catégories pourront être utilisées par l’équipe Marketing pour mieux communiquer</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Jeux de données</h3>
+                    <p>Données du site de e-commerce brésilien Olist</p>
+                    <ul>
+                        <li><a href="https://www.kaggle.com/olistbr/brazilian-ecommerce">kaggle.com/olistbr/brazilian-ecommerce</a>
+                        </li>
+                        <li>Données annonimisées</li>
+                        <li>Extraites de la base de données, 1 fichier csv par table</li>
+                    </ul>
+                </section>
+                <section>
+                    <ul>
+                        <li>Customers - 9.03mo - 5 colonnes - 99441 lignes</li>
+                        <li>Geolocation - 61.27mo - 5 colonnes - 1000163 lignes</li>
+                        <li>Order Items - 15.44mo - 7 colonnes - 112650 lignes</li>
+                        <li>Order Payments - 5.78mo - 5 colonnes - 103886 lignes</li>
+                        <li>Order Reviews - 14.45mo - 7 colonnes - 99224 lignes</li>
+                        <li>Order - 17.65mo - 8 colonnes - 99441 lignes</li>
+                        <li>Products - 2.38mo - 9 colonnes - 32951 lignes</li>
+                        <li>Sellers - 174.7ko - 4 colonnes - 3095 lignes</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Nettoyage et chargement des données</h3>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_01_notebooknettoyage.html" target="_blank ">P5_01_notebooknettoyage.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img data-src="./img/olist_erd.png" height="750" />
+                </section>
+                <section>
+                    <pre class="stretch"><code class="sql" data-line-numbers data-trim data-noescape>
+                        -- ALL group by order_id
+                        --------------------------------------------------------
+                        WITH
+                        -- PRODUCTS aggregation
+                        products_update AS (
+                            SELECT
+                                product_id,
+                                COALESCE(product_category_name, 'other') AS product_category_name,
+                                COALESCE(product_name_lenght, 0) AS product_name_lenght,
+                                COALESCE(product_description_lenght, 0) AS product_description_lenght,
+                                COALESCE(product_photos_qty, 0) AS product_photos_qty,
+                                COALESCE(product_weight_g, 0) AS product_weight_g,
+                                (
+                                    COALESCE(product_length_cm, 0) *
+                                    COALESCE(product_height_cm, 0) *
+                                    COALESCE(product_width_cm, 0)
+                                ) AS product_volume_cm3
+                            FROM products
+                        ),
+                        -- ITEMS group by order_item_id
+                        order_items_update AS (
+                            SELECT
+                                oi.order_id,
+                                COUNT(*) AS order_items_count, 
+                                COUNT(DISTINCT p.product_category_name) AS product_category_name_distinct_count,
+                                AVG(p.product_name_lenght) AS product_name_lenght_mean,
+                                AVG(p.product_description_lenght) AS product_description_lenght_mean,
+                                AVG(p.product_photos_qty) AS product_photos_qty_mean,
+                                AVG(p.product_weight_g) AS product_weight_g_mean,
+                                AVG(p.product_volume_cm3) AS product_volume_cm3_mean,
+                                group_concat(s.seller_zip_code_prefix) AS seller_zip_code_prefix_list,
+                                COUNT(DISTINCT s.seller_zip_code_prefix) AS seller_zip_code_prefix_distinct_count,
+                                AVG(CAST(strftime('%s', shipping_limit_date) AS INT)) AS shipping_limit_date_mean,
+                                AVG(oi.price) AS price_mean,
+                                SUM(oi.price) AS price_sum,
+                                AVG(oi.freight_value) AS freight_value_mean
+                            FROM order_items oi
+                            INNER JOIN products_update p ON oi.product_id = p.product_id
+                            INNER JOIN sellers s ON oi.seller_id = s.seller_id
+                            GROUP BY order_id
+                        ),
+                        -- REVIEWS group by order_id
+                        order_reviews_update AS (
+                            SELECT order_id,
+                                COUNT(*) AS reviews_count,
+                                AVG(review_score) AS review_score_mean,
+                                AVG(LENGTH(COALESCE(review_comment_message, ''))) AS review_message_mean
+                            FROM order_reviews
+                            GROUP BY order_id
+                        ),
+                        -- PAYMENTS group by order_id
+                        order_payments_update AS (
+                            SELECT order_id,
+                                COUNT(*) AS payments_count,
+                                SUM(CASE WHEN payment_type = "credit_card" THEN 1 ELSE 0 END) AS payment_credit_card,
+                                SUM(CASE WHEN payment_type = "debit_card" THEN 1 ELSE 0 END) AS payment_debit_card,
+                                SUM(CASE WHEN payment_type = "boleto" THEN 1 ELSE 0 END) AS payment_boleto,
+                                SUM(CASE WHEN payment_type = "voucher" THEN 1 ELSE 0 END) AS payment_voucher,
+                                SUM(CASE WHEN payment_type = "not_defined" THEN 1 ELSE 0 END) AS payment_not_defined,
+                                AVG(payment_installments) AS payment_installments_mean,
+                                AVG(payment_value) AS payment_value_mean,
+                                SUM(payment_value) AS payment_value_sum
+                            FROM order_payments
+                            GROUP BY order_id
+                        ),
+                        -- CUSTOMERS by customer_unique_id
+                        customers_update AS (
+                            SELECT c.*,
+                                g.geolocation_city,
+                                g.geolocation_state
+                            FROM customers c
+                            INNER JOIN geolocation g ON g.geolocation_zip_code_prefix = c.customer_zip_code_prefix
+                        ),
+                        -- ORDERS format 1
+                        orders_update AS (
+                            SELECT
+                                order_id,
+                                customer_unique_id,
+                                order_status,
+                                CAST(strftime('%s', date('now')) AS INT)-CAST(strftime('%s', order_purchase_timestamp) AS INT) AS order_diff_now_purchase_date,
+                                CAST(strftime('%s', order_purchase_timestamp) AS INT) AS order_purchase_date,
+                                CAST(COALESCE(strftime('%s', order_approved_at), strftime('%s', order_purchase_timestamp)) AS INT) AS order_approved_date,
+                                CAST(COALESCE(strftime('%s', order_delivered_carrier_date), strftime('%s', date(order_purchase_timestamp, '+1 year'))) AS INT) AS order_delivered_carrier_date,
+                                CAST(COALESCE(strftime('%s', order_delivered_customer_date), strftime('%s', date(order_purchase_timestamp, '+2 year'))) AS INT) AS order_delivered_customer_date,
+                                CAST(COALESCE(strftime('%s', order_estimated_delivery_date), strftime('%s', date(order_purchase_timestamp, '+1 year'))) AS INT) AS order_estimated_delivery_date
+                            FROM orders
+                        ),
+                        -- ORDERS format 2 and group all by order_id
+                        orders_update2 AS (
+                            SELECT
+                                o.order_id,
+                                o.customer_unique_id,
+                                o.order_status,
+                                o.order_diff_now_purchase_date,
+                                o.order_purchase_date,
+                                o.order_approved_date,
+                                o.order_delivered_carrier_date,
+                                o.order_delivered_customer_date,
+                                o.order_estimated_delivery_date,
+                                (o.order_delivered_carrier_date-o.order_purchase_date) AS order_diff_purchase_delivered_date,
+                                (o.order_delivered_carrier_date-o.order_estimated_delivery_date) AS order_diff_estimated_delivered_date,
+                                -- items
+                                oiu.order_items_count,
+                                oiu.order_items_count,
+                                oiu.product_category_name_distinct_count,
+                                oiu.product_name_lenght_mean,
+                                oiu.product_description_lenght_mean,
+                                oiu.product_photos_qty_mean,
+                                oiu.product_weight_g_mean,
+                                oiu.product_volume_cm3_mean,
+                                oiu.seller_zip_code_prefix_list,
+                                oiu.seller_zip_code_prefix_distinct_count,
+                                oiu.shipping_limit_date_mean,
+                                oiu.price_mean,
+                                oiu.price_sum,
+                                oiu.freight_value_mean,
+                                -- reviews
+                                oru.reviews_count,
+                                oru.reviews_count,
+                                oru.review_score_mean,
+                                oru.review_message_mean,
+                                -- payments
+                                opu.payments_count,
+                                opu.payments_count,
+                                opu.payment_credit_card,
+                                opu.payment_credit_card,
+                                opu.payment_debit_card,
+                                opu.payment_debit_card,
+                                opu.payment_boleto,
+                                opu.payment_boleto,
+                                opu.payment_voucher,
+                                opu.payment_voucher,
+                                opu.payment_not_defined,
+                                opu.payment_not_defined,
+                                opu.payment_installments_mean,
+                                opu.payment_value_mean,
+                                opu.payment_value_sum
+                            FROM orders_update o
+                            INNER JOIN order_items_update oiu ON oiu.order_id = o.order_id
+                            INNER JOIN order_reviews_update oru ON oru.order_id = o.order_id
+                            INNER JOIN order_payments_update opu ON opu.order_id = o.order_id
+                        )
+                        -- ORDERS groupe by customer_unique_id
+                        SELECT
+                            -- orders
+                            o.customer_unique_id,
+                            count(*) AS order_id_count,
+                            SUM(CASE WHEN o.order_status = "delivered" THEN 1 ELSE 0 END) AS order_status_delivered,
+                            SUM(CASE WHEN o.order_status = "invoiced" THEN 1 ELSE 0 END) AS order_status_invoiced,
+                            SUM(CASE WHEN o.order_status = "shipped" THEN 1 ELSE 0 END) AS order_status_shipped,
+                            SUM(CASE WHEN o.order_status = "processing" THEN 1 ELSE 0 END) AS order_status_processing,
+                            SUM(CASE WHEN o.order_status = "unavailable" THEN 1 ELSE 0 END) AS order_status_unavailable,
+                            SUM(CASE WHEN o.order_status = "canceled" THEN 1 ELSE 0 END) AS order_status_canceled,
+                            SUM(CASE WHEN o.order_status = "created" THEN 1 ELSE 0 END) AS order_status_created,
+                            SUM(CASE WHEN o.order_status = "approved" THEN 1 ELSE 0 END) AS order_status_approved,
+                            MIN(o.order_diff_now_purchase_date) AS order_diff_now_purchase_date_min,
+                            MAX(o.order_diff_now_purchase_date) AS order_diff_now_purchase_date_max,
+                            AVG(o.order_diff_now_purchase_date) AS order_diff_now_purchase_date_mean,
+                            MIN(o.order_diff_purchase_delivered_date) AS order_diff_purchase_delivered_date_min,
+                            MAX(o.order_diff_purchase_delivered_date) AS order_diff_purchase_delivered_date_max,
+                            AVG(o.order_diff_purchase_delivered_date) AS order_diff_purchase_delivered_date_mean,
+                            MIN(o.order_diff_estimated_delivered_date) AS order_diff_estimated_delivered_date_min,
+                            MAX(o.order_diff_estimated_delivered_date) AS order_diff_estimated_delivered_date_max,
+                            AVG(o.order_diff_estimated_delivered_date) AS order_diff_estimated_delivered_date_mean,
+                            -- items
+                            SUM(o.order_items_count) AS order_items_count_sum,
+                            AVG(o.order_items_count) AS order_items_count_mean,
+                            AVG(o.product_category_name_distinct_count) AS product_category_name_distinct_count_mean,
+                            AVG(o.product_name_lenght_mean) AS product_name_lenght_mean_mean,
+                            AVG(o.product_description_lenght_mean) AS product_description_lenght_mean_mean,
+                            AVG(o.product_photos_qty_mean) AS product_photos_qty_mean_mean,
+                            AVG(o.product_weight_g_mean) AS product_weight_g_mean_mean,
+                            AVG(o.product_volume_cm3_mean) AS product_volume_cm3_mean_mean,
+                            group_concat(o.seller_zip_code_prefix_list) AS seller_zip_code_prefix_list,
+                            AVG(o.seller_zip_code_prefix_distinct_count) AS seller_zip_code_prefix_distinct_count_mean,
+                            AVG(o.shipping_limit_date_mean) AS shipping_limit_date_mean_mean,
+                            AVG(o.price_mean) AS price_mean_mean,
+                            SUM(o.price_sum) AS price_sum,
+                            AVG(o.freight_value_mean) AS freight_value_mean_mean,
+                            -- reviews
+                            SUM(o.reviews_count) AS reviews_count_sum,
+                            AVG(o.reviews_count) AS reviews_count_mean,
+                            AVG(o.review_score_mean) AS review_score_mean_mean,
+                            AVG(o.review_message_mean) AS review_message_mean_mean,
+                            -- payments
+                            SUM(o.payments_count) AS payments_count_sum,
+                            AVG(o.payments_count) AS payments_count_mean,
+                            SUM(o.payment_credit_card) AS payment_credit_card_sum,
+                            AVG(o.payment_credit_card) AS payment_credit_card_mean,
+                            SUM(o.payment_debit_card) AS payment_debit_sum,
+                            AVG(o.payment_debit_card) AS payment_debit_mean,
+                            SUM(o.payment_boleto) AS payment_boleto_sum,
+                            AVG(o.payment_boleto) AS payment_boleto_mean,
+                            SUM(o.payment_voucher) AS payment_voucher_sum,
+                            AVG(o.payment_voucher) AS payment_voucher_mean,
+                            SUM(o.payment_not_defined) AS payment_not_defined_sum,
+                            AVG(o.payment_not_defined) AS payment_not_defined_mean,
+                            AVG(o.payment_installments_mean) AS payment_installments_mean_mean,
+                            AVG(o.payment_value_mean) AS payment_value_mean_mean,
+                            SUM(o.payment_value_sum) AS payment_value_sum,
+                            -- customers
+                            c.customer_unique_id,
+                            c.customer_zip_code_prefix,
+                            c.geolocation_city,
+                            c.geolocation_state
+                        FROM orders_update2 o
+                        INNER JOIN customers_update c ON c.customer_unique_id = o.customer_unique_id
+                        GROUP BY o.customer_unique_id;                        
+                    </code></pre>
+                </section>
+                <section>
+                    <img data-src="./img/customers_erd.png" style="vertical-align: middle;" />
+                    <div style="display: inline; margin: 0 50px 0 50px;">></div>
+                    <img data-src="./img/new_customers_erd.png" style="vertical-align: middle;" />
+                </section>
+                <section>
+                    <img data-src="./img/order_items_erd.png" style="vertical-align: middle;" />
+                    <div style="display: inline; margin: 0 50px 0 50px;">></div>
+                    <img data-src="./img/new_order_items_erd.png" style="vertical-align: middle;" />
+                </section>
+                <section>
+                    <img data-src="./img/order_payments_erd.png" style="vertical-align: middle;" />
+                    <div style="display: inline; margin: 0 50px 0 50px;">></div>
+                    <img data-src="./img/new_order_payments_erd.png" style="vertical-align: middle;" />
+                </section>
+                <section>
+                    <img data-src="./img/order_reviews_erd.png" style="vertical-align: middle;" />
+                    <div style="display: inline; margin: 0 50px 0 50px;">></div>
+                    <img data-src="./img/new_order_reviews_erd.png" style="vertical-align: middle;" />
+                </section>
+                <section>
+                    <img data-src="./img/new_orders_erd.png" height="750" style="vertical-align: middle;" />
+                    <div style="display: inline-block; margin: 0 50px;">
+                        <p>group by</p>
+                        <p>CUSTOMER ID</p>
+                        <p>></p>
+                    </div>
+                    <img data-src=" ./img/new_orders_groupby_customer_erd.png " height="750" style="vertical-align: middle; " />
+                </section>
+                <section>
+                    <img data-src="./img/shape_dataframe.png" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Analyse et préparation des données</h3>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_02_notebookanalyse.html " target="_blank ">P5_02_notebookanalyse.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>Reduction et centrage des données</h4>
+                    <img data-src="./img/scaled_dataframe_hist.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <h4>Analyse en composante principale</h4>
+                    <img data-src="./img/pca.png" style="background-color: white;" />
+                    <aside class="notes">
+                        - a droite ceux qui ont annulé ou dont le temps de delivery esyt long -> commande canceled NOK<br/>
+                        - a gauche colis delivered, review score max -> commande OK content NOK<br/>
+                        - haut, valeur elevéNOK<br/>
+                        - bas, valeur faible
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/pca2.png" height="750" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/pca_hist.png" height="750" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation des modèles de clustering</h3>
+                    <h4>KMEAN - toutes les features</h4>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_02_notebookanalyse.html " target="_blank ">P5_02_notebookanalyse.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_all_elbow.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_all_3.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_all_4.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_all_5.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_all_6.png" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation des modèles de clustering</h3>
+                    <h4>KMEAN - 3 features</h4>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_02_notebookanalyse.html " target="_blank ">P5_02_notebookanalyse.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_elbow.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_2.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_2_grid.png" height="750" style="background-color: white;" />
+                    <aside class="notes">
+                        - bleu, commande++<br/>
+                        - orange, commande--
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_3.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_3_grid.png" height="750" style="background-color: white;" />
+                    <aside class="notes">
+                        - bleu, commande++<br/>
+                        - orange, commande-- young<br/>
+                        - vert, commande-- old
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_4.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_4_grid.png" height="750" style="background-color: white;" />
+                    <aside class="notes">
+                        - bleu, commande-- $-- young<br/>
+                        - orange, commande-- $-- old<br/>
+                        - vert, commande++ $+-<br/>
+                        - rouge, command-- $++
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_5.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_3_5_grid.png" height="750" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation des modèles de clustering</h3>
+                    <h4>KMEAN - 4 features</h4>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_02_notebookanalyse.html " target="_blank ">P5_02_notebookanalyse.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_elbow.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_3.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_3_grid.png" height="750" style="background-color: white;" />
+                    <aside class="notes">
+                        - bleu, rescore score ++<br/>
+                        - orange, review score --<br/>
+                        - vert, commandé +1
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_4.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_4_grid.png" height="750" style="background-color: white;" />
+                    <aside class="notes">
+                        - bleu, commandé recemment (1)(rs++)<br/>
+                        - orange, commandé il y a longtemps (1)(rs++)<br/>
+                        - vert, commandé +1<br/>
+                        - rouge, review score --
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_5.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_5_grid.png" height="750" style="background-color: white;" />
+                    <aside class="notes">
+                        - bleu, rs++ $-- old<br/>
+                        - orange, rs--<br/>
+                        - vert, rs++ $--, young<br/>
+                        - rouge, commande++ $--<br/>
+                        - violet, $++ commane1
+                    </aside>
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_6.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/kmean_4_6_grid.png" height="750" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation des modèles de clustering</h3>
+                    <h4>DBSCAN</h4>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_02_notebookanalyse.html " target="_blank ">P5_02_notebookanalyse.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>Choix de l'EPS</h4>
+                    <img data-src="./img/dbscan_4_distance.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/dbscan_4_0.3_10.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/dbscan_4_0.3_10_grid.png" height="750" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/dbscan_4_0.3_50.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/dbscan_4_0.3_50_grid.png" height="750" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/dbscan_4_0.3_100.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/dbscan_4_0.3_100_grid.png" height="750" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation des modèles de clustering</h3>
+                    <h4>Agglomerative Clustering (ward)</h4>
+                    <blockquote style="width: 100%;">
+                        <p>
+                            Réalisé avec un sampling de 70%
+                        </p>
+                    </blockquote>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_02_notebookanalyse.html " target="_blank ">P5_02_notebookanalyse.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_dendrogram.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_4.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_4_grid.png" height="750" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_5.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_5_grid.png" height="750" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_6.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <img data-src="./img/agglomerative_clustering_4_6_grid.png" height="750" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation de la period d'update du modèle</h3>
+                    <p style="margin-top: 50px">
+                        <a href="./P5_03_notebookproduction.html " target="_blank ">P5_03_notebookproduction.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>Modèle choisi</h4>
+                    <ul>
+                        <li>KMEAN</li>
+                        <li>5 clusters</li>
+                        <li>Variables :</li>
+                        <ul>
+                            <li>Durée depuis la date du dernier achat</li>
+                            <li>Montant moyen des commandes</li>
+                            <li>Nombre de commandes</li>
+                            <li>Score moyen des commentaires</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <h4>Mise à jour de la requète SQL</h4>
+                    <pre><code class="sql" data-line-numbers="10" data-trim data-noescape>
+                        -- constant
+                        const AS (
+                            SELECT
+                                min(order_purchase_date) AS min_order_purchase_date,
+                                max(order_purchase_date) AS max_order_purchase_date
+                            FROM orders_update
+                        )
+                    </code></pre>
+                    <pre><code class="sql" data-line-numbers="43,47,48" data-trim data-noescape>
+                        -- ORDERS format 2 and group all by order_id
+                        orders_update2 AS (
+                            SELECT
+                                o.order_id,
+                                o.customer_unique_id,
+                                o.order_status,
+                                o.order_diff_now_purchase_date,
+                                o.order_purchase_date,
+                                o.order_approved_date,
+                                o.order_delivered_carrier_date,
+                                o.order_delivered_customer_date,
+                                o.order_estimated_delivery_date,
+                                (o.order_delivered_carrier_date-o.order_purchase_date) AS order_diff_purchase_delivered_date,
+                                (o.order_delivered_carrier_date-o.order_estimated_delivery_date) AS order_diff_estimated_delivered_date,
+                                -- items
+                                oiu.order_items_count,
+                                oiu.product_category_name_distinct_count,
+                                oiu.product_name_lenght_mean,
+                                oiu.product_description_lenght_mean,
+                                oiu.product_photos_qty_mean,
+                                oiu.product_weight_g_mean,
+                                oiu.product_volume_cm3_mean,
+                                oiu.seller_zip_code_prefix_list,
+                                oiu.seller_zip_code_prefix_distinct_count,
+                                oiu.shipping_limit_date_mean,
+                                oiu.price_mean,
+                                oiu.price_sum,
+                                oiu.freight_value_mean,
+                                -- reviews
+                                oru.reviews_count,
+                                oru.review_score_mean,
+                                oru.review_message_mean,
+                                -- payments
+                                opu.payments_count,
+                                opu.payment_credit_card,
+                                opu.payment_debit_card,
+                                opu.payment_boleto,
+                                opu.payment_voucher,
+                                opu.payment_not_defined,
+                                opu.payment_installments_mean,
+                                opu.payment_value_mean,
+                                opu.payment_value_sum
+                            FROM orders_update o, const
+                            INNER JOIN order_items_update oiu ON oiu.order_id = o.order_id
+                            INNER JOIN order_reviews_update oru ON oru.order_id = o.order_id
+                            INNER JOIN order_payments_update opu ON opu.order_id = o.order_id
+                            WHERE (o.order_purchase_date <= (const.min_order_purchase_date + {{period}}))
+                            AND (const.min_order_purchase_date + {{period}}) <= const.max_order_purchase_date
+                        )
+                    </code></pre>
+                </section>
+                <section>
+                    <div id="chart"></div>
+                </section>
+                <section>
+                    <h4>Période de mise à jour du modèle</h4>
+                    <ul>
+                        <li>Chaque semaine la première année</li>
+                        <li>Toutes les 3 semaines après la première année</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <img data-src="./img/questions.png" />
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js "></script>
+    <script src="plugin/notes/notes.js "></script>
+    <script src="plugin/markdown/markdown.js "></script>
+    <script src="plugin/highlight/highlight.js "></script>
+    <script src="plugin/chart/d3.min.js"></script>
+    <script src="plugin/chart/c3.min.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            width: 1400,
+            height: 800,
+
+            margin: 0.04,
+
+            minScale: 0.2,
+            maxScale: 2,
+
+            slideNumber: true,
+            showSlideNumber: 'all',
+
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+    <script>
+        var chart = c3.generate({
+            bindto: '#chart',
+            size: {
+                height: 750
+            },
+            legend: {
+                position: 'right'
+            },
+            tooltip: {
+                show: false
+            },
+            title: {
+                text: 'ARI score by number of week update'
+            },
+            data: {
+                x: 'weeks',
+                columns: [
+                    ['weeks', 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+                    ['1', 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                    ['2', 1.0, 1.0, 1.0, 1.0, 0.9878881523857814, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9904721387382807, 1.0, 0.9282542116079366, 1.0, 0.7388525769247393, 1.0, 0.9909899239275347, 1.0, 0.9981364029645933, 1.0, 1.0, 1.0, 0.9999581665126225, 1.0, 0.9974881595687224, 1.0, 0.5501733270403678, 1.0, 0.86660090188852, 1.0, 0.8876881693967966, 1.0, 0.9398186547797543, 1.0, 0.9422586014218076, 1.0, 0.9611523452134836, 1.0, 0.9547519439548882, 1.0, 0.9528642116274624, 1.0, 0.932374494631138, 1.0, 0.9128975584592027, 1.0, 0.9649397484609186, 1.0, 0.9554371275920648, 1.0, 0.9464263047399749, 1.0, 0.9691566919778766, 1.0, 0.9619419668587053, 1.0, 0.9354628780586108, 1.0, 0.9612603920337478, 1.0, 0.9738107688805211, 1.0, 0.9506786258729015, 1.0, 0.9710632478571166, 1.0, 0.9706379569442772, 1.0, 0.9409529310114694, 1.0, 0.9759593815112237, 1.0, 0.9766161430931317, 1.0, 0.9690484372809043, 1.0, 0.974563220043342, 1.0, 0.8852099897769339, 1.0, 0.9735545252525492, 1.0, 0.9801037541886266, 1.0, 0.9776374875627839, 1.0, 0.9869173547589939, 1.0, 0.9906163194201963, 1.0, 0.9760433359167958, 1.0, 0.8698046813750405, 1.0, 0.9760590156173016, 1.0, 1.0, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0],
+                    ['3', 1.0, 1.0, 1.0, 0.8279776695277284, 1.0, 0.8387896587545163, 0.8387896587545163, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 1.0, 0.9904721387382807, 0.8235289668232683, 1.0, 0.9426392788659786, 0.6978203210060948, 1.0, 0.9909899239275347, 0.9924460376724976, 1.0, 0.9983863787383452, 0.9984021135318922, 1.0, 0.9999581665126225, 0.9995091664584279, 1.0, 1.0, 0.5501733270403678, 1.0, 0.86660090188852, 0.6048283897092883, 1.0, 0.9136252634972895, 0.861392679645644, 1.0, 0.9422586014218076, 0.8930970266792623, 1.0, 0.955290237115162, 0.9132568673741496, 1.0, 0.9528642116274624, 0.8762721983771194, 1.0, 0.9455773311099852, 0.863415931973091, 1.0, 0.9649397484609186, 0.9082887464436777, 1.0, 0.9511358584583878, 0.9011778100571924, 1.0, 0.9691566919778766, 0.9433140102398688, 1.0, 0.9095624624652126, 0.8538455917204638, 1.0, 0.9612603920337478, 0.9367247997485693, 1.0, 0.9728243562621571, 0.9253735270385249, 1.0, 0.9710632478571166, 0.9310054479967682, 1.0, 0.9754094915600844, 0.9183620497511389, 1.0, 0.9759593815112237, 0.9597163995580531, 1.0, 0.985385285397459, 0.9551586857107439, 1.0, 0.974563220043342, 0.9598614279128143, 1.0, 0.9761326682169209, 0.9506307048598255, 1.0, 0.9801037541886266, 0.9611595263028876, 1.0, 0.9800620108471372, 0.9677636727153651, 1.0, 0.9906163194201963, 0.9717443593451147, 1.0, 0.9689068861113406, 0.8424668683934046, 1.0, 0.9760590156173016, 0.9755497938086297, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433],
+                    ['4', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9866882197739683, 0.9759115816446493, 1.0, 0.9282542116079366, 0.8540494481393656, 0.6231061202155715, 1.0, 0.9909899239275347, 0.9924460376724976, 0.9906144726340131, 1.0, 1.0, 0.9976997200768101, 0.9973759605431417, 1.0, 0.9974881595687224, 0.99768471577737, 0.551974491295517, 1.0, 0.86660090188852, 0.6048283897092883, 0.5550781010272616, 1.0, 0.9398186547797543, 0.8802131111435489, 0.8319718008373017, 1.0, 0.9611523452134836, 0.9193129169330952, 0.8798371014948485, 1.0, 0.9528642116274624, 0.8762721983771194, 0.8197199910934178, 1.0, 0.9128975584592027, 0.8384040460547987, 0.8128087389454745, 1.0, 0.9554371275920648, 0.9105969164510376, 0.8634684848795389, 1.0, 0.9691566919778766, 0.9433140102398688, 0.9087256378679404, 1.0, 0.9354628780586108, 0.8966947827430735, 0.8643817556928718, 1.0, 0.9738107688805211, 0.9478861801672661, 0.9022208188806476, 1.0, 0.9710632478571166, 0.9310054479967682, 0.9049754293209381, 1.0, 0.9409529310114694, 0.8704103455909218, 0.8449969887850303, 1.0, 0.9766161430931317, 0.963232429519179, 0.9341186630274639, 1.0, 0.974563220043342, 0.9598614279128143, 0.8500586000029495, 1.0, 0.9735545252525492, 0.9613700464272186, 0.9424355758070871, 1.0, 0.9776374875627839, 0.9583305607857674, 0.9466341067433561, 1.0, 0.9906163194201963, 0.9717443593451147, 0.9488345384223197, 1.0, 0.8698046813750405, 0.8370016067704427, 0.8178147100991685, 1.0, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433],
+                    ['6', 1.0, 1.0, 1.0, 0.8279776695277284, 0.8387896587545163, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 1.0, 0.9904721387382807, 0.8235289668232683, 0.6558506911870003, 0.6450185243600022, 0.4920210238874896, 1.0, 0.9909899239275347, 0.9924460376724976, 0.9906144726340131, 0.9927671401152809, 0.9936103348636235, 1.0, 0.9999581665126225, 0.9995091664584279, 0.997038814339748, 0.9972728544229641, 0.5522953802325332, 1.0, 0.86660090188852, 0.6048283897092883, 0.5550781010272616, 0.5226211097309571, 0.5193023477761206, 1.0, 0.9422586014218076, 0.8930970266792623, 0.8622307858669687, 0.8278043727366573, 0.7951101683680253, 1.0, 0.9528642116274624, 0.8762721983771194, 0.8197199910934178, 0.7793379412646297, 0.7125468690535957, 1.0, 0.9649397484609186, 0.9082887464436777, 0.8694150019154147, 0.8312677042304116, 0.7904057995613754, 1.0, 0.9691566919778766, 0.9433140102398688, 0.9087256378679404, 0.830141123812696, 0.781747135391233, 1.0, 0.9612603920337478, 0.9367247997485693, 0.9132253498430042, 0.8902087468018026, 0.8486187766116431, 1.0, 0.9710632478571166, 0.9310054479967682, 0.9049754293209381, 0.8847635548747662, 0.8318937571305286, 1.0, 0.9759593815112237, 0.9597163995580531, 0.9380919559436127, 0.9243619078960656, 0.8941149192605302, 1.0, 0.974563220043342, 0.9598614279128143, 0.8500586000029495, 0.8424288586756138, 0.8289249700704777, 1.0, 0.9801037541886266, 0.9611595263028876, 0.9399578266531057, 0.9216776751933657, 0.9108888966453473, 1.0, 0.9906163194201963, 0.9717443593451147, 0.9488345384223197, 0.9201469764385656, 0.7995652021712416, 1.0, 0.9760590156173016, 0.9755497938086297, 0.9755497163141839, 0.9755136543299457, 0.9755497163141839, 1.0, 1.0, 0.9999633053755433],
+                    ['8', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9866882197739683, 0.9759115816446493, 0.8125457719690655, 0.6353522713501993, 0.6092682321828473, 0.4617264311709329, 1.0, 0.9909899239275347, 0.9924460376724976, 0.9906144726340131, 0.9927671401152809, 0.9936103348636235, 0.9959374665236979, 0.9962573425287058, 1.0, 0.9974881595687224, 0.99768471577737, 0.551974491295517, 0.5451671861290771, 0.5127898419126975, 0.3949663594682918, 0.3854622091311614, 1.0, 0.9398186547797543, 0.8802131111435489, 0.8319718008373017, 0.7917593273281979, 0.7684669432460639, 0.7415861392027877, 0.7152625317283591, 1.0, 0.9528642116274624, 0.8762721983771194, 0.8197199910934178, 0.7793379412646297, 0.7125468690535957, 0.6578598407505476, 0.6423616695792316, 1.0, 0.9554371275920648, 0.9105969164510376, 0.8634684848795389, 0.8466392008234376, 0.8231066112782313, 0.8048479630633586, 0.7786124567725788, 1.0, 0.9354628780586108, 0.8966947827430735, 0.8643817556928718, 0.8438026398627292, 0.8235597067182518, 0.8049186232952683, 0.7694727605440244, 1.0, 0.9710632478571166, 0.9310054479967682, 0.9049754293209381, 0.8847635548747662, 0.8318937571305286, 0.7648185219910003, 0.7440904514379492, 1.0, 0.9766161430931317, 0.963232429519179, 0.9341186630274639, 0.9208287663652899, 0.8977454386015145, 0.8840865540221574, 0.7889690671573162, 1.0, 0.9735545252525492, 0.9613700464272186, 0.9424355758070871, 0.9245326174024415, 0.9044284138413847, 0.8871192637573809, 0.8772087329085696, 1.0, 0.9906163194201963, 0.9717443593451147, 0.9488345384223197, 0.9201469764385656, 0.7995652021712416, 0.7699999604381563, 0.7528378216191991, 1.0, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433],
+                    ['13', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 0.8173237118933242, 0.5379393743165588, 0.2796260927759444, 0.25701886124683515, 0.2882912174047171, 0.21194995370154446, 0.20717706563871918, 0.18823076081181003, 1.0, 0.9981364029645933, 1.0, 1.0, 0.9976997200768101, 0.9973759605431417, 0.9954550395859868, 0.9920539851405387, 0.992295868895393, 0.5506709020778288, 0.5440635176089247, 0.5175834344203532, 0.39498650211553143, 1.0, 0.9136252634972895, 0.861392679645644, 0.8085183176177609, 0.7662884565128361, 0.7320895820373609, 0.7133349199178736, 0.6908035560603638, 0.6683911124397229, 0.6197135432129285, 0.5993644214620454, 0.555386249699566, 0.521580895244454, 1.0, 0.9128975584592027, 0.8384040460547987, 0.8128087389454745, 0.7693086356626704, 0.73935850829813, 0.7092695445957143, 0.6769348073884622, 0.6684349450436361, 0.6537234899203972, 0.6441027048935428, 0.6277379264119958, 0.5875481120223744, 1.0, 0.9565775060400686, 0.9205490294123696, 0.8976728835530312, 0.8754461279891881, 0.8542310672700828, 0.8152103070568804, 0.7810783863955242, 0.763233505156532, 0.7353214341026397, 0.7189462999890858, 0.7070491176587774, 0.6632858172102347, 1.0, 0.9759593815112237, 0.9597163995580531, 0.9380919559436127, 0.9243619078960656, 0.8941149192605302, 0.8778260669686905, 0.8538713837519244, 0.8399666055207441, 0.7749347681891537, 0.7718637680403633, 0.7625467326136592, 0.7629412558803538, 1.0, 0.9804334646942828, 0.9586919574056396, 0.9398864076319615, 0.9286368558036369, 0.9166895941041935, 0.9091397484456227, 0.8926395932083973, 0.872320601388304, 0.8467116923179895, 0.7339498600310098, 0.7072730630322188, 0.6917533126807581, 1.0, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433],
+                    ['17', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 1.0, 0.9866882197739683, 0.9759115816446493, 0.8125457719690655, 0.6353522713501993, 0.6092682321828473, 0.4617264311709329, 0.4222104181070355, 0.38557170329939744, 0.3443739303685322, 0.3161973659931729, 0.28796221422537116, 0.26446894206260996, 0.24926410100492033, 0.23033563899165949, 0.21685088337605352, 0.20293859052847357, 1.0, 0.5501733270403678, 0.543242135234358, 0.5110863373699335, 0.39343577323819406, 0.38385732519575705, 0.3764611467021388, 0.38162715398549235, 0.38237354457417155, 0.38945870837266133, 0.38924502538999234, 0.39685597204061984, 0.40385858238386574, 0.40661389935969505, 0.3980160716896024, 0.39690155922061776, 0.39067599687882026, 1.0, 0.9455773311099852, 0.863415931973091, 0.7935258468875971, 0.7701134468670758, 0.7296689705064265, 0.7029720167254271, 0.6739627343890722, 0.643644261784343, 0.636244709268258, 0.6226885804505453, 0.6143253095920177, 0.5993407952934273, 0.5623633134633114, 0.5401337812645506, 0.5256977711399957, 0.5115113936371284, 1.0, 0.9738107688805211, 0.9478861801672661, 0.9022208188806476, 0.8622643699909629, 0.8402170439278176, 0.8076631399111015, 0.7876052675127, 0.7726232113495758, 0.7253272451440792, 0.6630480950127627, 0.6470170821941676, 0.6339490643049182, 0.6198277666616266, 0.6125943017873788, 0.5934442735761868, 0.5857370691792005, 1.0, 0.9845623971256524, 0.8721347704023878, 0.8636347328633553, 0.8492139466216205, 0.8475675792941707, 0.8353841422504523, 0.8314421349148488, 0.8261365055496129, 0.8235890697190503, 0.8210172841616411, 0.8168961467048673, 0.8164222775328437, 0.808965456457549, 0.7972113261079627, 0.7795436742178732, 0.6818746391604698, 1.0, 0.9760590156173016, 0.9755497938086297, 0.9755497163141839, 0.9755136543299457, 0.9755497163141839, 0.9755497163141839, 0.9755497163141839, 0.9755136543299457],
+                    ['21', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 0.8269033942404992, 0.5590365987991047, 0.36093406986926996, 1.0, 0.9426392788659786, 0.6978203210060948, 0.6910493707278975, 0.6688907737470406, 0.6808400169204167, 0.6800265677524058, 0.6580364414296183, 0.6401240401875664, 0.6346833356300968, 0.6266261530830114, 0.6096240853159786, 0.5988801564859593, 0.5880503143502253, 0.2833906859806476, 0.2763272543677347, 0.26168983796468265, 0.2678764737537891, 0.25595737060371915, 0.2456391245204432, 0.2359850265300084, 1.0, 0.9422586014218076, 0.8930970266792623, 0.8622307858669687, 0.8278043727366573, 0.7951101683680253, 0.7330654794848598, 0.7051263030249997, 0.6526133057690696, 0.6139781572357182, 0.5881278543549285, 0.5363253570283943, 0.4957371923137901, 0.4851511639509584, 0.4628814705822621, 0.44899906262004724, 0.4347047359985753, 0.41887318738961044, 0.41839914651190435, 0.41190727679101535, 0.40958845802173793, 1.0, 0.9095624624652126, 0.8538455917204638, 0.8207155890444537, 0.7928300025592063, 0.7750986378915735, 0.7574432283100607, 0.7421191109412503, 0.7112469238250126, 0.6842144201061732, 0.6714243056209444, 0.6491343516666648, 0.6370374271205131, 0.62886620027851, 0.589341341067442, 0.5338174518434182, 0.5239335957211522, 0.5161392230213083, 0.5075732335647272, 0.504089774600307, 0.4896010180919829, 1.0, 0.974563220043342, 0.9598614279128143, 0.8500586000029495, 0.8424288586756138, 0.8289249700704777, 0.8276608210135029, 0.8160749369420819, 0.8127011774894535, 0.808082636145737, 0.8060718562668737, 0.8039307634611128, 0.8000566716499787, 0.7999922248759441, 0.7930669131294221, 0.7818971760178365, 0.7649448051856785, 0.6695749633760861, 0.651563324009638, 0.6410543299589236, 0.6411020659078323, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433],
+                    ['26', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 0.8269033942404992, 0.5590365987991047, 0.36093406986926996, 0.31862101616095484, 0.3057703575972485, 0.21858625735143095, 0.21177636224175425, 0.19295271924883614, 1.0, 0.9981364029645933, 1.0, 1.0, 0.9976997200768101, 0.9973759605431417, 0.9954550395859868, 0.9920539851405387, 0.992295868895393, 0.5506709020778288, 0.5440635176089247, 0.5175834344203532, 0.39498650211553143, 0.390423436212037, 0.3831621315946497, 0.3885225228025472, 0.3896248461538953, 0.3966962796329446, 0.3964320403452294, 0.4038656423582987, 0.41053526763280623, 0.4130298464249471, 0.4042927823757639, 0.403198037534171, 0.3968373603915899, 0.39185722863814126, 1.0, 0.9128975584592027, 0.8384040460547987, 0.8128087389454745, 0.7693086356626704, 0.73935850829813, 0.7092695445957143, 0.6769348073884622, 0.6684349450436361, 0.6537234899203972, 0.6441027048935428, 0.6277379264119958, 0.5875481120223744, 0.5634543966896991, 0.5506226777581003, 0.536448808803673, 0.5271572031366937, 0.5167265098231648, 0.5092135590590472, 0.4920430064337569, 0.47657559505706126, 0.47011344058578036, 0.4571143068189877, 0.4516474097850697, 0.4508457739777747, 0.4194075436883683, 1.0, 0.9759593815112237, 0.9597163995580531, 0.9380919559436127, 0.9243619078960656, 0.8941149192605302, 0.8778260669686905, 0.8538713837519244, 0.8399666055207441, 0.7749347681891537, 0.7718637680403633, 0.7625467326136592, 0.7629412558803538, 0.7538642866617654, 0.7527297552230361, 0.750559004744715, 0.7504967459312216, 0.7497706495871396, 0.747146838027368, 0.7484569807335375, 0.7425166758091885, 0.7288529524314825, 0.7109731634815715, 0.6217624339396745, 0.6023518246022154, 0.5908563851039895, 1.0, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433],
+                    ['39', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 0.8269033942404992, 0.5590365987991047, 0.36093406986926996, 0.31862101616095484, 0.3057703575972485, 0.21858625735143095, 0.21177636224175425, 0.19295271924883614, 0.22677175215533618, 0.22779871268795177, 0.2210125778077537, 0.2162765335372937, 0.21348763264566936, 0.2166378259241931, 0.20857276436021358, 0.20149854465689943, 0.19554182598426648, 0.08622212731819495, 0.08559804060963096, 0.08818979817393778, 0.08381614713397557, 1.0, 0.9136252634972895, 0.861392679645644, 0.8085183176177609, 0.7662884565128361, 0.7320895820373609, 0.7133349199178736, 0.6908035560603638, 0.6683911124397229, 0.6197135432129285, 0.5993644214620454, 0.555386249699566, 0.521580895244454, 0.5012823668528805, 0.4585827697379404, 0.4262958042265713, 0.4192056503124719, 0.402029933369945, 0.3917153004973879, 0.3811087630284575, 0.3691168963654425, 0.3701986993414946, 0.3657616424052887, 0.3649554518043459, 0.3608025280870576, 0.3351575656141935, 0.31519363206214124, 0.30405167161229535, 0.29444531088871456, 0.28864317905647274, 0.2823690627056146, 0.277178746947131, 0.2663276363589066, 0.25588263648322407, 0.25107306856177086, 0.24255060988034613, 0.23734872594903567, 0.23393264019719065, 0.21094383138755937, 1.0, 0.9759593815112237, 0.9597163995580531, 0.9380919559436127, 0.9243619078960656, 0.8941149192605302, 0.8778260669686905, 0.8538713837519244, 0.8399666055207441, 0.7749347681891537, 0.7718637680403633, 0.7625467326136592, 0.7629412558803538, 0.7538642866617654, 0.7527297552230361, 0.750559004744715, 0.7504967459312216, 0.7497706495871396, 0.747146838027368, 0.7484569807335375, 0.7425166758091885, 0.7288529524314825, 0.7109731634815715, 0.6217624339396745, 0.6023518246022154, 0.5908563851039895, 0.5909703892985838, 0.5909695551516453, 0.5909473665925559, 0.5909695551516453, 0.5909695551516453, 0.5909695551516453, 0.5909473665925559],
+                    ['52', 1.0, 0.8279776695277284, 0.8279776695277284, 1.0, 0.9878881523857814, 0.8279776695277284, 0.8279776695277284, 1.0, 1.0, 1.0, 1.0, 0.9847704978135748, 0.9847704978135748, 0.8269033942404992, 0.5590365987991047, 0.36093406986926996, 0.31862101616095484, 0.3057703575972485, 0.21858625735143095, 0.21177636224175425, 0.19295271924883614, 0.22677175215533618, 0.22779871268795177, 0.2210125778077537, 0.2162765335372937, 0.21348763264566936, 0.2166378259241931, 0.20857276436021358, 0.20149854465689943, 0.19554182598426648, 0.08622212731819495, 0.08559804060963096, 0.08818979817393778, 0.08381614713397557, 0.0888513099212617, 0.09060053515854628, 0.09155261256089392, 0.09184680534103179, 0.09190194391173051, 0.09366636829576427, 0.09431391319203782, 0.09585870712611455, 0.09765242111075857, 0.0995766472595387, 0.09975838697716051, 0.09936319470542515, 0.09836230331751261, 1.0, 0.9128975584592027, 0.8384040460547987, 0.8128087389454745, 0.7693086356626704, 0.73935850829813, 0.7092695445957143, 0.6769348073884622, 0.6684349450436361, 0.6537234899203972, 0.6441027048935428, 0.6277379264119958, 0.5875481120223744, 0.5634543966896991, 0.5506226777581003, 0.536448808803673, 0.5271572031366937, 0.5167265098231648, 0.5092135590590472, 0.4920430064337569, 0.47657559505706126, 0.47011344058578036, 0.4571143068189877, 0.4516474097850697, 0.4508457739777747, 0.4194075436883683, 0.37502395338369854, 0.371535717432362, 0.3678604015524195, 0.3645625667140904, 0.3638058539337482, 0.3562299392774753, 0.3550471951505438, 0.3503521884106859, 0.350406017187808, 0.392843316277494, 0.38945489368762864, 0.3806747722971032, 0.37660075690456996, 0.3705450286480973, 0.3635146820807536, 0.3569584791244736, 0.35115867395981726, 0.348533588259134, 0.3448804070551532, 0.3437405591131447, 0.3390118923119489, 0.33313872414085455, 0.3244008836534126, 0.2826575546896359, 0.2748314213316418, 0.2703157721986584, 1.0, 1.0, 0.9999633053755433, 1.0, 1.0, 1.0, 0.9999633053755433]
+                ],
+                type: 'line'
+            }
+        });
+    </script>
+</body>
+
+</html>

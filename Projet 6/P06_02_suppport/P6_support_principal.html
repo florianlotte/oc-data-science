@@ -1,0 +1,507 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>PROJET 5</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <img src="./img/logo_openclassrooms.svg" alt="openclassrooms logo" style="height: 240px; margin: 0 auto 1rem auto; background: transparent;" class="logo">
+                <h3>Data Scientist # Projet 6</h3>
+                <h3>Classifiez automatiquement des biens de consommation</h3>
+                <p>Florian LOTTE</p>
+            </section>
+            <section>
+                <img data-src="./img/profile picture.png" alt="profile picture" style="height: 400px; width: 400px; border-radius: 50%; float: right; margin-right: 1rem;" class="logo">
+                <h3 style="text-align: left;">Florian LOTTE</h3>
+                <p style="text-align: left;">10 ans d'experience en développement</p>
+                <ul style="display: block; text-align: left; margin: 0 0 0 1em;">
+                    <li>Développeur embarqué C++/Java (6 ans)</li>
+                    <li>Développeur backend Python (2 ans)</li>
+                    <li>Développeur blockchain IOT Scala (1 an)</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Problématique</h3>
+                    <blockquote style="width: 100%;">
+                        <p>Une entreprise <b>"Place de marché"</b> souhaite lancer une marketplace e-commerce.</p>
+                        <p>Les articles sont catégorisés manuellement par les vendeurs donc peu fiable.</p>
+                        <p>Pour améliorer l'UX, il devient nécéssaire d'automatiser cette tâche de catégorisation.</p>
+                    </blockquote>
+                </section>
+                <section>
+                    <p>Réaliser une première étude de la faisabilité d'un moteur de classification :</p>
+                    <ul>
+                        <li>Analyser le jeu de données<br>Prétraitement des descriptions des produits et des images,</li>
+                        <li>Une réduction de dimension,</li>
+                        <li>Un clustering.</li>
+                    </ul>
+                    <blockquote style="width: 100%;">
+                        <p>Le résultat sera présenté sous forme de graphiques et un calcule de similarité entre les catégories réelles et les clusters</p>
+                    </blockquote>
+                </section>
+                <section>
+                    <h3>Jeux de données</h3>
+                    <p>Données sous forme d'une archive zip avec images et descriptions</p>
+                    <ul>
+                        <li><a href="https://s3-eu-west-1.amazonaws.com/static.oc-static.com/prod/courses/files/Parcours_data_scientist/Projet+-+Textimage+DAS+V2/Dataset+projet+pre%CC%81traitement+textes+images.zip">Dataset - projet pre-traitement textes images</a>
+                        </li>
+                        <li>Fichier des dercriptions
+                            <ul>
+                                <li>flipkart_com-ecommerce_sample_1050.csv</li>
+                                <li>1050 lignes</li>
+                                <li>50 features</li>
+                            </ul>
+                        </li>
+                        <li>Dossier Images
+                            <ul>
+                                <li>[UUID].jpg</li>
+                                <li>1050 images</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Exploration des données</h3>
+                    <p>
+                        <a href="./P6_01_notebookexploration.html" target="_blank ">P6_01_notebookexploration.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>Dataframe initiale</h4>
+                    <img data-src="./img/matrix0.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <h4 data-id="code-title">Normalisation des données</h4>
+                    <pre class="stretch" data-id="code-animation"><code class="hljs" data-trim>
+                        def product_specification_decode(json_str):
+                            s = json_str.lower().replace("=>", ':').replace('{"product_specification":nil}', '{"product_specification":""}')
+                            return json.loads(s)
+
+                        def product_category_tree_decode(json_str):
+                            cat_list = json.loads(json_str.lower())
+                            assert(isinstance(cat_list, list))
+                            assert(len(cat_list) == 1)
+                            return [s.strip() for s in cat_list[0].split('>>')]
+
+                        data['uniq_id'] = data['uniq_id'].apply(lambda x: uuid.UUID(x))
+                        data['crawl_timestamp'] = data['crawl_timestamp'].apply(lambda x: pd.to_datetime(x))
+                        data['retail_price'] = data['retail_price'].astype('float64')
+                        data['discounted_price'] = data['discounted_price'].astype('float64')
+                        data['product_rating'] = data['product_rating'].replace(['No rating available'], -1.0)
+                        data['overall_rating'] = data['overall_rating'].replace(['No rating available'], -1.0)
+                        data['product_rating'] = data['product_rating'].astype('float64')
+                        data['overall_rating'] = data['overall_rating'].astype('float64')
+                        data['brand'].fillna('', inplace=True)
+                        data['product_specifications'].fillna('{"product_specification":""}', inplace=True)
+                        data['product_specifications'] = data['product_specifications'].apply(product_specification_decode)
+                        data['product_category_tree'] = data['product_category_tree'].apply(product_category_tree_decode)
+                        data[[f"product_category_{i}" for i in range(7)]] = pd.DataFrame(data['product_category_tree'].tolist(), index= data.index)
+                        data['description'] = data['description'].apply(lambda x: x.lower())
+                        data['product_name'] = data['product_name'].apply(lambda x: x.lower())
+                        data['product_name_description'] = data['product_name'] + ' ' + data['description']
+                        data.set_index('uniq_id', inplace=True, verify_integrity=True)
+					</code></pre>
+                </section>
+                <section>
+                    <h4>Dataframe normalisée</h4>
+                    <img data-src="./img/matrix1.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <h4 data-id="code-title">Catégorie 0</h4>
+                    <pre data-id="code-animation"><code class="language-plaintext" data-trim>
+                        home furnishing               150
+                        baby care                     150
+                        watches                       150
+                        home decor & festive needs    150
+                        kitchen & dining              150
+                        beauty and personal care      150
+                        computers                     150
+					</code></pre>
+                </section>
+                <section>
+                    <h4 data-id="code-title">Catégorie 1</h4>
+                    <pre class="stretch" data-id="code-animation"><code class="language-plaintext" data-trim>
+                        wrist watches                      149
+                        laptop accessories                  87
+                        infant wear                         84
+                        coffee mugs                         74
+                        showpieces                          71
+                        bed linen                           65
+                        fragrances                          65
+                        network components                  49
+                        cookware                            27
+                        table decor & handicrafts           27
+                        combos and kits                     24
+                        wall decor & clocks                 22
+                        bath linen                          21
+                        curtains & accessories              19
+                        makeup                              18
+                        baby bedding                        15
+                        body and skin care                  15
+                        baby & kids gifts                   15
+                        baby bath & skin                    14
+                        kitchen tools                       14
+                        kitchen & dining linen              14
+                        decorative lighting & lamps         14
+                        containers & bottles                13
+                        cushions, pillows & covers          13
+                        hair care                            9
+                        feeding & nursing                    8
+                        bar & glassware                      8
+                        bath and spa                         7
+                        health care                          7
+                        lighting                             7
+                        diapering & potty training           7
+                        floor coverings                      6
+                        living                               6
+                        flowers, plants & vases              5
+                        showpiece                            5
+                        baby grooming                        4
+                        computer peripherals                 4
+                        religion & devotion                  3
+                        tablet accessories                   3
+                        living room furnishing               3
+                        tableware & cutlery                  3
+                        computer components                  2
+                        laptops                              2
+                        eye care                             2
+                        storage                              2
+                        furniture & furnishings              2
+                        dinnerware & crockery                1
+                        garden & leisure                     1
+                        clocks                               1
+                        housekeeping & laundry               1
+                        men's grooming                       1
+                        women's hygiene                      1
+                        pressure cookers & pans              1
+                        tidy home furnishing                 1
+                        strollers & activity gear            1
+                        software                             1
+                        candles & fragrances                 1
+                        consumables & disposables            1
+                        true home decor & festive needs      1
+                        jmd home furnishing                  1
+                        kripa's home furnishing              1
+                        beauty accessories                   1
+					</code></pre>
+                </section>
+                <section>
+                    <h4>Dataframe finale</h4>
+                    <img data-src="./img/matrix2.png" style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Qu'est ce que le NLP</h3>
+                </section>
+                <section>
+                    <h4>Natural Language Processing</h4>
+                    <blockquote style="width: 100%;">
+                        <p>Le <b>traitement automatique du langage naturel</b> est un domaine multidisciplinaire impliquant la linguistique, l'informatique et l'intelligence artificielle, qui vise à créer des outils de traitement de la langue naturelle pour
+                            diverses applications</p>
+                    </blockquote>
+                </section>
+                <section>
+                    <h4>Lemmatisation</h4>
+                    <blockquote style="width: 100%;">
+                        <p>La <b>lemmatisation</b> désigne un traitement lexical apporté à un texte en vue de son classement dans un index ou de son analyse. Ce traitement consiste à appliquer aux occurrences des lexèmes sujets à flexion (en français, verbes,
+                            substantifs, adjectifs) un codage renvoyant à leur entrée lexicale commune (« forme canonique » enregistrée dans les dictionnaires de la langue, le plus couramment), que l'on désigne sous le terme de lemme.</p>
+                    </blockquote>
+					<aside class="notes">
+						genre / nombre / personne / mode<br>
+                        Exemple : Les / la, étoiles /étoile, claires / clair, luisent / luire, dans / dans, la / la, nuit / nuit, noire / noir
+                    </aside>
+                </section>
+                <section>
+                    <h4>Stemming</h4>
+                    <blockquote style="width: 100%;">
+                        <p>La <b>racinisation</b> est un procédé de transformation des flexions en leur radical ou racine. La racine d’un mot correspond à la partie du mot restante une fois que l’on a supprimé son (ses) préfixe(s) et suffixe(s), à savoir
+                            son radical. Contrairement au lemme qui correspond à un terme issu de l’usage ordinaire des locuteurs de la langue, la racine ne correspond généralement qu’à un terme résultant de ce type d’analyse. Par exemple, le mot chercher
+                            a pour radical cherch qui ne correspond pas à un terme employé en dehors d’une référence à ce radical même.</p>
+                    </blockquote>
+					<aside class="notes">
+						Par exemple, en anglais, la racinisation de « fishing' », « fished » , « fish » et « fisher » donne « fish »
+                    </aside>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation de la description à l'aide d'un <br>bag of word</h3>
+                    <p>
+                        <a href="./P6_02_notebookbagofword.html " target="_blank ">P6_02_notebookbagofword.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>Count Vectorizer</h4>
+                    <img data-src="./img/bow_table.webp" style="background-color: white;" />
+                </section>
+                <section><img data-src="./img/count_vectorizer_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/count_vectorizer_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/count_vectorizer_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/count_vectorizer_pca_3d.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation de la description à l'aide de <br>Tf-Idf</h3>
+                    <p>
+                        <a href="./P6_02_notebookbagofword.html " target="_blank ">P6_02_notebookbagofword.html</a>
+                    </p>
+                    \[\begin{aligned} tfidf(t,d,D) &amp; = tf(t,d) . idf(t,D) \end{aligned} \]
+                </section>
+                <section>
+                    \[\begin{aligned} tf(t,d) &amp; = {\lvert \text{Number of times term t appears in document d} \rvert \over \rvert \text{Total terms in document d} \rvert} \end{aligned} \]
+                    <img data-src="./img/tf_table.webp" style="background-color: white;" />
+					<aside class="notes">
+						Term Freqency
+                    </aside>
+                </section>
+                <section>
+                    \[\begin{aligned} idf(t,D) &amp; = \log{\lvert \text{Number of documents} \rvert \over \lvert \text{Number of documents that contain term t} \rvert} \end{aligned} \]
+                    <img data-src="./img/idf_table.webp" style="background-color: white;" />
+					<aside class="notes">
+						Inverse Document Frequency
+                    </aside>
+                </section>
+                <section><img data-src="./img/tfidf_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/tfidf_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/tfidf_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/tfidf_pca_3d.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation de la description à l'aide de <br>Word2Vec</h3>
+                    <p>
+                        <a href="./P6_03_notebookembedding.html " target="_blank ">P6_03_notebookembedding.html</a>
+                    </p>
+                </section>
+                <section>
+                    <blockquote style="width: 100%;">
+                        <p>
+                            <b>Word2vec</b> est un groupe de modèles utilisé pour le "word embedding".<br>Ces modèles ont été développés par une équipe de recherche chez Google sous la direction de Tomas Mikolov.<br>Ce sont des réseaux de neurones artificiels
+                            à deux couches entraînés pour reconstruire le contexte linguistique des mots.
+                        </p>
+                    </blockquote>
+                    <aside class="notes">
+                        embedding matrix shape : (1050, 300)
+                    </aside>
+                </section>
+                <section><img data-src="./img/word2vec_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/word2vec_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/word2vec_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/word2vec_pca_3d.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation de la description à l'aide de <br>Bert</h3>
+                    <p>
+                        <a href="./P6_03_notebookembedding.html " target="_blank ">P6_03_notebookembedding.html</a>
+                    </p>
+                </section>
+                <section>
+                    <blockquote style="width: 100%;">
+                        <p>
+                            <b>BERT</b>, acronyme anglais de Bidirectional Encoder Representations from Transformers, est un modèle de langage développé par Google en 2018. Cette méthode a permis d'améliorer significativement les performances en traitement
+                            automatique des langues.
+                        </p>
+                    </blockquote>
+                    <aside class="notes">
+                        embedding matrix shape : (1050, 768)
+                    </aside>
+                </section>
+                <section><img data-src="./img/bert_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/bert_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/bert_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/bert_pca_3d.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation de la description à l'aide de <br>USE</h3>
+                    <p>
+                        <a href="./P6_03_notebookembedding.html " target="_blank ">P6_03_notebookembedding.html</a>
+                    </p>
+                    <aside class="notes">
+						Universal Sentence Encoder<br>
+                        embedding matrix shape : (1050, 512)
+                    </aside>
+                </section>
+                <section><img data-src="./img/use_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/use_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/use_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/use_pca_3d.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Tratement des images</h3>
+                    <img data-src="./img/histogram.jpg" />
+                </section>
+                <section>
+                    <h3>Contraste/Luminosité (Mertenes Fusion)</h3>
+                    <img data-src="./img/exposures.jpg" style="vertical-align: middle;" />
+                    <div style="display: inline; margin: 0 20px 0 20px;">></div>
+                    <img data-src="./img/fusion_mertens.jpg" style="vertical-align: middle;" />
+                </section>
+                <section>
+                    <h3>Débruitage (Bilateral Filtering)</h3>
+                    <img class="stretch" data-src="./img/bilateral.jpg" style="vertical-align: middle;" />
+                </section>
+                <section>
+                    <h3>Egalisation de l'histograme (CLAHE)</h3>
+                    <img data-src="./img/clahe_1.jpg" style="vertical-align: middle;" />
+                    <div style="display: inline; margin: 0 50px 0 50px;">></div>
+                    <img data-src="./img/clahe_2.jpg" style="vertical-align: middle;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation des images à l'aide de <br>SIFT</h3>
+                    <p>
+                        <a href="./P6_04_notebookimages.html " target="_blank ">P6_04_notebookimages.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>Sift</h4>
+                    <blockquote style="width: 100%;">
+                        <p>
+                            La <b>Scale-Invariant Feature Transform</b>, est un algorithme utilisé dans le domaine de la vision par ordinateur pour détecter et identifier les éléments similaires entre différentes images numériques.<br>L'étape fondamentale
+                            consiste à calculer ce que l'on appelle les « descripteurs SIFT » des images à étudier.<br>Il s'agit d'informations numériques dérivées de l'analyse locale d'une image et qui caractérisent le contenu visuel de cette image de
+                            la façon la plus indépendante possible de l'échelle, du cadrage, de l'angle d'observation et de l'exposition.
+                        </p>
+                    </blockquote>
+                    <aside class="notes">
+                        embedding matrix shape : (1050, 70)
+                    </aside>
+                </section>
+                <section>
+                    <h4>Sift descriptors</h4>
+                    <img class="r-stretch" data-src="./img/sift_descriptors.png" style="background-color: white;" />
+                </section>
+                <section><img data-src="./img/sift_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/sift_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/sift_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/sift_pca_3d.png" style="background-color: white;" /></section>
+                <section><img class="r-stretch" data-src="./img/sift_image_grid.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation des images à l'aide du <br>CNN VGG16</h3>
+                    <p>
+                        <a href="./P6_04_notebookimages.html " target="_blank ">P6_04_notebookimages.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>VGG16</h4>
+                    <img class="r-stretch" data-src="./img/vgg16_layers.png" style="background-color: white;" />
+                    <aside class="notes">
+                        embedding matrix shape : (1050, 4096)
+                    </aside>
+                </section>
+                <section><img data-src="./img/vgg16_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/vgg16_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/vgg16_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/vgg16_pca_3d.png" style="background-color: white;" /></section>
+                <section><img class="r-stretch" data-src="./img/vgg16_image_grid.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation des images à l'aide du <br>CNN InceptionV3</h3>
+                    <p>
+                        <a href="./P6_04_notebookimages.html " target="_blank ">P6_04_notebookimages.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>InceptionV3</h4>
+                    <img class="r-stretch" data-src="./img/inceptionv3_layers.png" style="background-color: white;" />
+                    <aside class="notes">
+                        embedding matrix shape : (1050, 2048)
+                    </aside>
+                </section>
+                <section><img data-src="./img/inceptionv3_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/inceptionv3_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/inceptionv3_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/inceptionv3_pca_3d.png" style="background-color: white;" /></section>
+                <section><img class="r-stretch" data-src="./img/inceptionv3_image_grid.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <section>
+                    <h3>Catégorisation des images à l'aide du <br>CNN ResNet50V2</h3>
+                    <p>
+                        <a href="./P6_04_notebookimages.html " target="_blank ">P6_04_notebookimages.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h4>ResNet50V2</h4>
+                    <img class="r-stretch" data-src="./img/resnet50v2_layers.jpg" style="background-color: white;" />
+                    <aside class="notes">
+                        embedding matrix shape : (1050, 2048)
+                    </aside>
+                </section>
+                <section><img data-src="./img/resnet50v2_tsne_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/resnet50v2_tsne_3d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/resnet50v2_pca_2d.png" style="background-color: white;" /></section>
+                <section><img data-src="./img/resnet50v2_pca_3d.png" style="background-color: white;" /></section>
+                <section><img class="r-stretch" data-src="./img/resnet50v2_image_grid.png" style="background-color: white;" /></section>
+            </section>
+            <section>
+                <h3>Conclusion</h3>
+                <br>
+                <div>
+                    Meilleur résultat pour le texte :<br> Tf-Idf TSNE 2D => ARI = 0.57
+                </div>
+                <br>
+                <div>
+                    Meilleur résultat pour les images :<br> VGG16 TSNE 3D => ARI = 0.45
+                </div>
+            </section>
+            <section>
+                <img data-src="./img/questions.png" />
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js "></script>
+    <script src="plugin/notes/notes.js "></script>
+    <script src="plugin/markdown/markdown.js "></script>
+    <script src="plugin/highlight/highlight.js "></script>
+    <script src="plugin/math/math.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            width: 1400,
+            height: 800,
+
+            margin: 0.04,
+
+            minScale: 0.2,
+            maxScale: 2,
+
+            slideNumber: true,
+            showSlideNumber: 'all',
+
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+        });
+    </script>
+</body>
+
+</html>

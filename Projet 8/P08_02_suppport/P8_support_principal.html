@@ -1,0 +1,378 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>PROJET 8</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <img src="./img/logo_openclassrooms.svg" alt="openclassrooms logo" style="height: 240px; margin: 0 auto 1rem auto; background: transparent;" class="logo">
+                <h3>Data Scientist # Projet 8</h3>
+                <h3>Déployez un modèle dans le cloud</h3>
+                <p>Florian LOTTE</p>
+            </section>
+            <section>
+                <img data-src="./img/profile picture.png" alt="profile picture" style="height: 400px; width: 400px; border-radius: 50%; float: right; margin-right: 1rem;" class="logo">
+                <h3 style="text-align: left;">Florian LOTTE</h3>
+                <p style="text-align: left;">10 ans d'experience en développement</p>
+                <ul style="display: block; text-align: left; margin: 0 0 0 1em;">
+                    <li>Développeur embarqué C++/Java (6 ans)</li>
+                    <li>Développeur backend Python (2 ans)</li>
+                    <li>Développeur blockchain IOT Scala (1 an)</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Problématique</h3>
+                    <blockquote style="width: 100%;">
+                        <p><b>La startup "Fruits!" propose de préserver la biodiversité des fruits en permettant des traitements spécifiques pour chaque espèce de fruits en développant des robots cueilleurs intelligents.</b></p>
+                    </blockquote>
+                    <br>
+                    <p>La startup souhaite développer une application mobile de reconnaissance de fruits en s'appuyant sur une architechture Big Data.</p>
+                    <p>Nous nous appuierons sur une base d'images de fruits avec leurs labels associés qui sevira de point de départ.</p>
+                </section>
+                <section>
+                    <h3>Travail</h3>
+                    <p>La chaîne de traitement des données devra comprendre :
+                        <ul>
+                            <li>Le preprocessing des images</li>
+                            <li>Une étape de réduction de dimension</li>
+                        </ul>
+                    </p>
+                    <p>Il n’est pas nécessaire d’entraîner un modèle pour le moment.</p>
+                    <br>
+                    <blockquote style="width: 100%;">
+                        <p><b>L'architecture devra permettre un passage à l'échelle en utilisant AWS EMR basé sur EC2, S3 et IAM.</b></p>
+                    </blockquote>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Jeux de données</h3>
+                    <img data-src="./img/fruits_logo.png" style="display: block; height: 200px; width: 200px; border-radius: 50%; background-color: white; margin: 0 auto 1rem auto; " />
+                    <ul>
+                        <li><a href="https://www.kaggle.com/datasets/moltean/fruits ">https://www.kaggle.com/datasets/moltean/fruits</a>
+                        </li>
+                        <li><a href="https://github.com/Horea94/Fruit-Images-Dataset ">https://github.com/Horea94/Fruit-Images-Dataset</a>
+                        </li>
+                    </ul>
+                    <br><br>
+                    <ul>
+                        <li>fruits-360_dataset : ~90k imeages / ~750mo</li>
+                        <li>fruits-360-original-size : ~12k images / 550mo</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>fruits-360_dataset</h3>
+                    <ul>
+                        <li>The total number of images: 90483.</li>
+                        <li>Training set size: 67692 images (one fruit or vegetable per image).</li>
+                        <li>Test set size: 22688 images (one fruit or vegetable per image).</li>
+                        <li>The number of classes: 131 (fruits and vegetables).</li>
+                        <li>Image size: 100x100 pixels.</li>
+                    </ul>
+                    <blockquote style="width: 100%;">
+                        <p>Filename format: imageindex100.jpg (e.g. 32100.jpg) or rimageindex100.jpg (e.g. r32100.jpg) or r2imageindex100.jpg or r3imageindex100.jpg. "r" stands for rotated fruit. "r2" means that the fruit was rotated around the 3rd axis.
+                            "100" comes from image size (100x100 pixels).</p>
+                    </blockquote>
+                </section>
+                <section>
+                    <iframe width="600px" height="400px" src="https://www.youtube.com/embed/_HFKJ144JuU" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <img data-src="./img/pyspark.webp" />
+                </section>
+                <section>
+                    <h3>Apache Spark</h3>
+                    <blockquote style="width: 100%;">
+                        <p>Spark est un framework open source de calcul distribué. Il s'agit d'un ensemble d'outils et de composants logiciels structurés selon une architecture définie. Développé à l'université de Californie à Berkeley par AMPLab, Spark
+                            est aujourd'hui un projet de la fondation Apache. Ce produit est un cadre applicatif de traitements big data pour effectuer des analyses complexes à grande échelle.</p>
+                    </blockquote>
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/spark1.jpg" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/spark3.png" style="background-color: white;" />
+                </section>
+                <section>
+                    <h3>Les API Spark</h3>
+                    <ul>
+                        <li>RDD (2011)</li>
+                        <ul>
+                            <li>Collection d'objet Java distribué</li>
+                            <li>Opérateurs fonctionnel commme : map, filter,...</li>
+                        </ul>
+                        <li>DataFrame (2013)</li>
+                        <ul>
+                            <li>Collection d'objet de type 'Row' distribué</li>
+                            <li>opérateurs basés sur des expressions et UDF</li>
+                            <li>Nommé et indexé</li>
+                            <li>Rapide et representation interne efficace (zero copy)</li>
+                        </ul>
+                        <li>DataSet (2015)</li>
+                        <ul>
+                            <li>Row en interne, Objet java en externe</li>
+                            <li>Le meilleur des 2 mondes (type safe et rapide)</li>
+                            <li>Mais plus lent et moins bon pour l'interface avec Python que les DF</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/pyspark2.png" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Provisionning des ressources</h3>
+                    <video data-autoplay src="img/aws-hero-compressed-a.mp4"></video>
+                </section>
+                <section>
+                    <h3>Creation d'un utilisateur (AWS IAM)</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_iam.png" />
+                </section>
+                <section>
+                    <h3>Création du stockage (AWS S3)</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_s3_root.png" />
+                </section>
+                <section>
+                    <h3>Creation du cluster spark (AWS EMR)</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_emr_software.png" />
+                </section>
+                <section>
+                    <h3>Creation du cluster spark (AWS EMR)</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_emr_hardware.png" />
+                </section>
+                <section>
+                    <h3>Creation du cluster spark (AWS EMR)</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_emr_params.png" />
+                </section>
+                <section>
+                    <h3>Creation du cluster spark (AWS EMR)</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_emr_security.png" />
+                </section>
+                <section>
+                    <h3>Provisionning du cluster EMR</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_emr_startting.png" />
+                </section>
+                <section>
+                    <h3>Cluster EMR disponible</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_emr_waitting.png" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Déscription de l'application</h3>
+                    <p>
+                        <a href="./P8_01_notebookexploration.html " target="_blank ">P8_01_notebookexploration.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Instanciation du context spark</h3>
+                    <pre><code class="language-python" data-trim data-noescape>
+conf = SparkConf().setAppName('oc_ds_p8')
+spark = SparkSession.builder.config(conf=conf).getOrCreate()
+sc = spark.sparkContext
+
+...
+
+spark.stop()
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Chargement des images depuis S3</h3>
+                    <pre><code class="language-python" data-trim data-noescape>
+s3_uri = "s3://oc-p8/images/**"
+images_df = spark.read.format("binaryFile").option("pathGlobFilter", "*.jpg").load(s3_uri).cache()
+images_df = images_df.withColumn('label', element_at(split(col('path'), '/'),-2))
+                        </code></pre>
+                </section>
+                <section>
+                    <h3>Reduction de dimension via CNN</h3>
+                    <pre><code class="language-python" data-trim data-noescape>
+model = ResNet50(include_top=False, input_shape=(None, None, 3), weights="imagenet", pooling="avg")
+bc_model_weights = sc.broadcast(model.get_weights())
+
+@udf(returnType=VectorUDT())
+def features_vectorizer_1(content):
+    img = Image.open(io.BytesIO(content))
+    arr = img_to_array(img)
+    arr = preprocess_input(arr)
+    model = ResNet50(include_top=False, input_shape=arr.shape, weights=None, pooling="avg")
+    model.set_weights(bc_model_weights.value)
+    features = model.predict(np.array([arr]))
+    return DenseVector(features.flatten())
+
+features_df = images_df.select('path', 'label', features_vectorizer_1('content').alias('features'))
+                        </code></pre>
+                </section>
+                <section>
+                    <h3>Clustering des images</h3>
+                    <pre><code class="language-python" data-trim data-noescape>
+k = features_df.select("label").distinct().count()
+
+kmeans = KMeans(k=k, seed=1)
+kmeans.setFeaturesCol('features')
+kmeans.setPredictionCol('prediction')
+
+kmeans_model = kmeans.fit(features_df.select('features'))
+cluster_df = kmeans_model.transform(features_df)
+                        </code></pre>
+                </section>
+                <section>
+                    <h3>Export du resultat dans S3</h3>
+                    <pre><code class="language-python" data-trim data-noescape>
+cluster_df.select('path', 'label', 'features', 'prediction').toPandas().to_csv("s3://oc-p8/training_result.csv")
+                        </code></pre>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Execution de l'application</h3>
+                    <p>
+                        <a href="./P8_01_notebookexploration.html " target="_blank ">P8_01_notebookexploration.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Autorisation du port SSH</h3>
+                    <img class="r-stretch" data-src="./img/captures/aws_security_group.png" />
+                </section>
+                <section>
+                    <h3>Création du Tunnel SSH</h3>
+                    <img class="r-stretch" data-src="./img/captures/shell_emr.png" />
+                </section>
+                <section>
+                    <h3>Upload des fichiers sur S3</h3>
+                    <img class="r-stretch" data-src="./img/captures/upload_app_s3.png" />
+                </section>
+                <section>
+                    <h3>Upload des fichiers sur S3</h3>
+                    <div style="display: inline;">
+                        <img data-src=" ./img/captures/aws_s3_images.png " style="width: 40%; vertical-align: middle; " />
+                        <img data-src="./img/captures/aws_s3_files.png " style="width: 40%; vertical-align: middle; " />
+                    </div>
+                </section>
+                <section>
+                    <h3>Demarrage du JupyterHub</h3>
+                    <p>
+                        <a href="https://ec2-35-180-23-58.eu-west-3.compute.amazonaws.com:9443/ " target="_blank ">https://ec2-35-180-23-58.eu-west-3.compute.amazonaws.com:9443/</a>
+                    </p>
+                    <div>
+                        <img class="r-stretch " data-src="./img/captures/aws_emr_jupyterhub_login.png " style="vertical-align: middle; " />
+                        <img class="r-stretch " data-src="./img/captures/aws_emr_jupyterhub_explorer.png " style="vertical-align: middle; " />
+                    </div>
+                </section>
+                <section>
+                    <h3>Execution du notebook</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_jupyterhub_notebook.png " />
+                </section>
+                <section>
+                    <h3>Téléchargement des résultats</h3>
+                    <p>
+                        <a href="https://oc-p8.s3.eu-west-3.amazonaws.com/training_result.csv " target="_blank ">https://oc-p8.s3.eu-west-3.amazonaws.com/training_result.csv</a>
+                    </p>
+                    <img class="r-stretch " data-src="./img/captures/result.png " />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Analyse et optimisation de l'application</h3>
+                </section>
+                <section>
+                    <h3>Ajout d'une étape (vers l'automatisation)</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_add_step.png" />
+                    <pre><code class="language-bash" data-trim data-noescape>
+                        $ spark-submit --deploy-mode cluster s3://oc-p8/app.py
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Les Executors Spark</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_executors.png" />
+                    <p>Le driver n'execute pas de taches d'application, il orchestre !</p>
+                </section>
+                <section>
+                    <h3>Les 'dead' Executors (Problème ?)</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_dead_executors.png" />
+                </section>
+                <section>
+                    <h3>Step avec 1 executor</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_step_end_1_1300.png" />
+                </section>
+                <section>
+                    <h3>Timeline avec 1 executor</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_timeline_inprogress_1_1300.png" />
+                </section>
+                <section>
+                    <h3>Step avec 2 executors</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_step_end_2_1300.png" />
+                </section>
+                <section>
+                    <h3>Timeline avec 2 executors</h3>
+                    <img class="r-stretch " data-src="./img/captures/aws_emr_step_timeline_2_1300.png" />
+                </section>
+                <section>
+                    <h3>Performances finale</h3>
+                    <ul>
+                        <li>1 executor</li>
+                        <ul>
+                            <li>131 images > 3min</li>
+                            <li>1310 images > 30min</li>
+                        </ul>
+                        <li>2 executors</li>
+                        <ul>
+                            <li>131 images > 2min</li>
+                            <li>1310 images > 16min</li>
+                        </ul>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <img data-src="./img/questions.png " />
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js "></script>
+    <script src="plugin/notes/notes.js "></script>
+    <script src="plugin/markdown/markdown.js "></script>
+    <script src="plugin/highlight/highlight.js "></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            width: 1400,
+            height: 800,
+
+            margin: 0.04,
+
+            minScale: 0.2,
+            maxScale: 2,
+
+            slideNumber: true,
+            showSlideNumber: 'all',
+
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>

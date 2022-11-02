@@ -1,0 +1,352 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>PROJET 7</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <img src="./img/logo_openclassrooms.svg" alt="openclassrooms logo" style="height: 240px; margin: 0 auto 1rem auto; background: transparent;" class="logo">
+                <h3>Data Scientist # Projet 7</h3>
+                <h3>Implémentez un modèle de scoring</h3>
+                <p>Florian LOTTE</p>
+            </section>
+            <section>
+                <img data-src="./img/profile picture.png" alt="profile picture" style="height: 400px; width: 400px; border-radius: 50%; float: right; margin-right: 1rem;" class="logo">
+                <h3 style="text-align: left;">Florian LOTTE</h3>
+                <p style="text-align: left;">10 ans d'experience en développement</p>
+                <ul style="display: block; text-align: left; margin: 0 0 0 1em;">
+                    <li>Développeur embarqué C++/Java (6 ans)</li>
+                    <li>Développeur backend Python (2 ans)</li>
+                    <li>Développeur blockchain IOT Scala (1 an)</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Problématique</h3>
+                    <blockquote style="width: 100%;">
+                        <p>
+                            <b>"Prêt à dépenser"</b> est une société financière qui propose des crédits à la consommation pour des personnes ayant peu ou pas du tout d'historique de prêt.
+                            <p />
+                            <p>
+                                L’entreprise souhaite <b>mettre en œuvre un outil de "scoring crédit" pour calculer la
+                                probabilité</b> qu’un client rembourse son crédit, puis classifie la demande en crédit accordé ou refusé à l'aide d'un <b>algorithme de classification</b>.
+                                <p />
+                            </p>
+                            Enfin <b>développer un dashboard interactif</b> pour que les chargés de relation client puissent expliquer les décisions d’octroi de crédit ainsi que de permettre à leurs clients consulter leurs informations.
+                        </p>
+                    </blockquote>
+                </section>
+                <section>
+                    <h3>Mission</h3>
+                    <ol>
+                        <li>Construire un modèle de scoring qui donnera une prédiction sur la probabilité de faillite d'un client de façon automatique.</li>
+                        <li>Construire un dashboard interactif à destination des gestionnaires de la relation client permettant d'interpréter les prédictions faites par le modèle, et d’améliorer la connaissance client des chargés de relation client.</li>
+                    </ol>
+                    <blockquote style="width: 100%;">
+                        <p>Nous sélectionnerons un kernel Kaggle pour vous faciliter la préparation des données nécessaires à l’élaboration du modèle de scoring</p>
+                    </blockquote>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Jeux de données</h3>
+                    <a href="https://www.kaggle.com/c/home-credit-default-risk/data" style=" display: block; text-align: left; margin: 0 0 0.2em 0;">Données d'une socitée de crédit</a>
+                    <ul style=" display: block; text-align: left; margin: 0 0 0 1em;">
+                        <li>application_train - 166.13mo - 122 colonnes - 307511 lignes</li>
+                        <li>application_test - 26.57mo - 121 colonnes - 48744 lignes</li>
+                        <li>bureau - 170.02mo - 17 colonnes - 1716428 lignes</li>
+                        <li>bureau_balance - 375.59mo - 3 colonnes - 27299925 lignes</li>
+                        <li>previous_application - 404.97mo - 37 colonnes - 1670214 lignes</li>
+                        <li>installments_payments - 723.12mo - 8 colonnes - 13605401 lignes</li>
+                        <li>POS_CASH_balance - 392.7mo - 8 colonnes - 10001358 lignes</li>
+                        <li>credit_card_balance - 424.58mo - 23 colonnes - 3840312 lignes</li>
+                        <li>sample_submission - 536.2ko - 2 colonnes - 48744 lignes</li>
+                        <li>HomeCredit_columns_description - 37.38 KiBmo - 5 colonnes - 219 lignes</li>
+                </section>
+                <section>
+                    <h3>Schema des données</h3>
+                    <img class="r-stretch" data-src="./img/home_credit.png " />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Chargement et nettoyage des données</h3>
+                    <p>
+                        <a href="./P7_01_notebookexploration.html " target="_blank ">P7_01_notebookexploration.html</a>
+                    </p>
+                </section>
+                <section>
+                    <ul>
+                        <li>Chargement de chaque fichier de données</li>
+                        <li>Premier nettoyage et normalisation des valeurs</li>
+                        <li>Encoding des classes et valeurs textuelles</li>
+                        <li>Calcule de nouvelles features</li>
+                        <li>Groupement par 'SK_ID_CURR'</li>
+                        <li>Aggregation (min/max/mean...) des features groupées</li>
+                        <li>Groupement des fichiers par 'SK_ID_CURR'</li>
+                        <li>Suppression des features avec un remplissage
+                            < 10%</li>
+                                <li>Export CSV des données</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Forme des données finales</h3>
+                    <img class="r-stretch" data-src="./img/shape_final.png " style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Exploration des données</h3>
+                    <p>
+                        <a href="./P7_01_notebookexploration.html " target="_blank ">P7_01_notebookexploration.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Description des données</h3>
+                    <ul>
+                        <li>356255 lignes, 424 features</li>
+                        <li>Index : SK_ID_CURR</li>
+                        <li>Features utilisées : 423</li>
+                        <li>Lignes ou TARGET est renseigné : 307511</li>
+                        <ul>
+                            <li>Nombre de TARGET positive : 24825</li>
+                            <li>Nombre de TARGET negative : 282686</li>
+                            <li>Jeu de données déséquilibré !</li>
+                        </ul>
+                        <li>Lignes ou TARGET est non renseigné : 48744</li>
+                    </ul>
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/correlation_matrix.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/payment_rate_bar.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/ext_source_1_bar.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/ext_source_2_bar.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/ext_source_3_bar.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/bi_grid_scatter.png " style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Test des modèles</h3>
+                    <p>
+                        <a href="./P7_02_notebookscoring.html " target="_blank ">P7_02_notebookscoring.html</a>
+                    </p>
+                    <br><br>
+                    <ul>
+                        <li>LightGBM</li>
+                        <li>XGBoost</li>
+                        <li>RandomForest</li>
+                    </ul>
+                    <blockquote style="width: 100%;">
+                        <p>Par soucis de performance, nous n'utiliserons que 10% des données pour les tests</p>
+                    </blockquote>
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/lightgbm_without_balanced.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/lightgbm_with_balanced.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/xgboost_without_balanced.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/xgboost_with_balanced.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/randomforest_without_balanced.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/randomforest_with_balanced.png " style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Optimisation de l'équilibre de classe</h3>
+                    <p>
+                        <a href="./P7_02_notebookscoring.html " target="_blank ">P7_02_notebookscoring.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/lightgbm_oversampling.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/lightgbm_undersampling.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/lightgbm_underoversampling.png " style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Optimisation du seuil de classification</h3>
+                    <p>
+                        <a href="./P7_02_notebookscoring.html " target="_blank ">P7_02_notebookscoring.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Matrice de confusion</h3>
+                    <img class="r-stretch" data-src="./img/confusion_matrix.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <h3>Définitions (sensibilité/precision/spécificité)</h3>
+                    <p>
+                        \[\begin {aligned} recall = sensitivity = { TP \over TP + FN } = \text{True Positive Rate} \end{aligned} \]
+                    </p>
+                    <p>
+                        \[\begin {aligned} precision = { TP \over TP + FP } \end{aligned} \]
+                    </p>
+                    <p>
+                        \[\begin {aligned} specificity = { TN \over FP + TN } = 1 - \text{False Positive Rate} \end{aligned} \]
+                    </p>
+                </section>
+                <section>
+                    <h3>Score sur les Faux positifs/négatifs</h3>
+                    <p>
+                        \[\begin {aligned} { score = FN + FP } \end {aligned} \]
+                    </p>
+                    <p>
+                        \[\begin {aligned} { score_{(n,m)} = n * FN + m * FP } \end {aligned} \]
+                    </p>
+                </section>
+                <section>
+                    <h3>Définition du G-mean score</h3>
+                    <p>
+                        \[\begin {aligned} { G\text{\textendash}mean = \sqrt{sensitivity * specificity}} \end{aligned} \]
+                    </p>
+                </section>
+                <section>
+                    <h3>Définition du F-beta score</h3>
+                    <p>
+                        \[\begin {aligned} { F_\beta = (1 + \beta^2) { precision * sensitivity \over \beta^2*precision + sensitivity}} \end{aligned} \]
+                    </p>
+                    <p>
+                        \[\begin {aligned} { F_1 = 2 { precision * sensitivity \over precision + sensitivity}} \end{aligned} \]
+                    </p>
+                    <p>
+                        \[\begin {aligned} { F_2 = 5 { precision * sensitivity \over 4*precision + sensitivity}} \end{aligned} \]
+                    </p>
+                </section>
+                <section>
+                    <h3>Explication du F-beta score</h3>
+                    <p>F0.5 (beta=0.5) : More weight on precision, less weight on sensitivity.</p>
+                    <p>F1 (beta=1.0) : Balance the weight on precision and sensitivity.</p>
+                    <p>F2 (beta=2.0) : Less weight on precision, more weight on sensitivity</p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Explication des features</h3>
+                    <p>
+                        <a href="./P7_02_notebookscoring.html " target="_blank ">P7_02_notebookscoring.html</a>
+                    </p>
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/shap_feature_explication.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/shap_explication_ext_source_2.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/shap_explication_code_gender.png " style="background-color: white;" />
+                </section>
+                <section>
+                    <img class="r-stretch" data-src="./img/shap_explication_days_birth.png " style="background-color: white;" />
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Présentation du dashboard</h3>
+                    <p>
+                        <a href="./P7_03_notebookdashboard.html " target="_blank ">Notebook de prototypage du dashboard</a>
+                    </p>
+                    <p>
+                        <a href="https://github.com/florianlotte/oc-ds-p7-dashboard " target="_blank ">Dépôt Git du dashboard</a>
+                    </p>
+                    <p>
+                        <a href="http://51.159.28.232:8889/docs " target="_blank ">APP Backend (API)</a>
+                    </p>
+                    <p>
+                        <a href="http://51.159.28.232:8888/ " target="_blank ">APP Frontend (Dashboard)</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Desctiption du dashboard</h3>
+                    <blockquote style="width: 100%;">
+                        <p>Le menu en haut à droite contient deux onglet :</p>
+                        <ul>
+                            <li>Le premier "HOME" est la page d'acceuil qui contient des données génériques</li>
+                            <li>Le deuxieme "CREDIT" contient les données et analyse détailés de chaques crédit</li>
+                        </ul>
+                        <p style="color: red">Attendre au moins 20s entre charque chargement de page car le dashboard est déployé sur un petit serveur type Raspberry !</p>
+                    </blockquote>
+                </section>
+                <section><img class="r-stretch" data-src="./img/dashboard_home.png " style="background-color: white;" /></section>
+                <section><img class="r-stretch" data-src="./img/dashboard_credit.png " style="background-color: white;" /></section>
+            </section>
+            <section>
+                <h3>Note Méthodologique</h3>
+                <p>
+                    <a href="./P7_note_methodologique.html " target="_blank ">P7_note_methodologique.html</a>
+                </p>
+            </section>
+            <section>
+                <img data-src="./img/questions.png " />
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js "></script>
+    <script src="plugin/notes/notes.js "></script>
+    <script src="plugin/markdown/markdown.js "></script>
+    <script src="plugin/highlight/highlight.js "></script>
+    <script src="plugin/math/math.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            width: 1400,
+            height: 800,
+
+            margin: 0.04,
+
+            minScale: 0.2,
+            maxScale: 2,
+
+            slideNumber: true,
+            showSlideNumber: 'all',
+
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+        });
+    </script>
+</body>
+
+</html>

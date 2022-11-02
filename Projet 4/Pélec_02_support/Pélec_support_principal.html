@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>PROJET 4</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <img src="./img/logo_openclassrooms.svg" alt="openclassrooms logo" style="height: 180px; margin: 0 auto 1rem auto; background: transparent;" class="logo">
+                <h4>Data Scientist # Projet élec</h4>
+                <h4>Anticipez les besoins en consommation électrique de bâtiments</h4>
+                <p>
+                    <small>Florian LOTTE</small>
+                </p>
+            </section>
+            <section>
+                <img data-src="./img/profile picture.png" alt="profile picture" style="height: 200px; width: 200px; border-radius: 50%; float: right" class="logo">
+                <h3 style="text-align: left;">Florian LOTTE</h3>
+                <p style="text-align: left; font-size: 0.8em;">10 ans d'experience en développement</p>
+                <ul style="display: block; text-align: left; margin: 0 0 0 1em; font-size: 0.8em;">
+                    <li>Développeur embarqué C++/Java (6 ans)</li>
+                    <li>Développeur backend Python (2 ans)</li>
+                    <li>Développeur blockchain IOT Scala (1 an)</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Problématique</h3>
+                    <blockquote style="font-size: 0.7em; width: 100%;">
+                        <img data-src="./img/seattle.png" alt="profile picture" style="height: 150px; border-radius: 15px; background-color: white; margin: 20px 0px 0px 0px;" class="logo">
+                        <p>
+                            Des relevés minutieux ont été effectués par vos agents en 2015 et en 2016. Cependant, ces relevés sont coûteux à obtenir, et à partir de ceux déjà réalisés,
+                            <b> vous voulez tenter de prédire les émissions de CO2 et la consommation totale d’énergie</b> de bâtiments pour lesquels elles n’ont pas encore été mesurées.
+                        </p>
+                    </blockquote>
+                </section>
+                <section>
+                    <ul style="font-size: 0.7em;">
+                        <li>Réaliser une courte analyse exploratoire</li>
+                        <li>Tester différents modèles de prédiction afin de répondre au mieux à la problématique</li>
+                        <li>Evaluer l’intérêt de l’ENERGY STAR Score pour la prédiction d’émissions</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Jeux de données</h3>
+                    <p>Données provenant de la ville de Seattle</p>
+                    <ul style="font-size: 0.7em;">
+                        <li><a href="https://www.kaggle.com/city-of-seattle/sea-building-energy-benchmarking">www.kaggle.com/city-of-seattle/sea-building-energy-benchmarking</a></li>
+                        <li>Données sur 2ans (2015, 2016)</li>
+                        <li>2015 - 1.51mo - 47 features - 3340 observations</li>
+                        <li>2016 - 1.17mo - 46 features - 3376 observations</li>
+                        <li>Features et observations à harmoniser !</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Nettoyage et exploration</h3>
+                    <p style="font-size: 0.7em; ">Voir
+                        <a href="./Pélec_01_notebookexploration.html" target="_blank ">Pélec_01_notebookexploration.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Synthèse</h3>
+                    <ul style="font-size: 0.7em; ">
+                        <li>Uniformisation des features</li>
+                        <li>Concaténation des DataFrames 2015 et 2016</li>
+                        <li>Suppression des features inutiles</li>
+                        <li>Suppression des bâtiments destinés à l’habitation</li>
+                        <li>Suppression des features corrélées</li>
+                        <li>Traitement des outliers et des NaN</li>
+                        <li>Traitement des données text</li>
+                        <li>Traitement de la localisation</li>
+                        <li>Encoding des types object</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Détails du jeu de données final</h3>
+                    <ul style="font-size: 0.7em; ">
+                        <li>FINAL-building-energy-benchmarking.csv</li>
+                        <li>817ko</li>
+                        <li>37 features</li>
+                        <ul>
+                            <li>Informations de locatisation et d'identifications</li>
+                            <li>Taille et forme du batiments</li>
+                            <li>Infomations de destinations et d'usages</li>
+                            <li>Infomations qualitatives</li>
+                            <li>Infomations quantitatives non corrélées entre elles</li>
+                        </ul>
+                        <li>3301 observations</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Evaluation des modèles supervisées</h3>
+                    <p style="font-size: 0.7em; ">Voir
+                        <a href="./Pélec_02_notebookmodel.html" target="_blank ">Pélec_02_notebookmodel.html</a>
+                    </p>
+                </section>
+                <section>
+                    <h3>Synthèse</h3>
+                    <ul style="font-size: 0.7em; ">
+                        <li>Normalisation de la distribution des features quantitatives</li>
+                        <li>Analyse préliminaire des modèles supervisées :</li>
+                        <ul>
+                            <li>Modèle Naif</li>
+                            <li>Regression linéaire</li>
+                            <li>Régression Rigide, Lasso, ElasticNet</li>
+                            <li>Arbre de décision RandomForest, XGBoost</li>
+                        </ul>
+                        <li>Analyse avancé des modèles supervisées</li>
+                        <ul>
+                            <li>Avec des données standardisées</li>
+                            <li>Avec les 4 features les plus importantes</li>
+                            <li>Avec les 8 features les plus importantes</li>
+                            <li>Avec l'Energy Star score</li>
+                            <li>Avec 0.98 quantile</li>
+                            <li>Avec 0.98 quantile et avec l'Energy Star score</li>
+                        </ul>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Conclusion</h3>
+                </section>
+                <section>
+                    <h4>Meilleur modèle pour la prédiction d'émission</h4>
+                    <img data-src="./img/plot_emission_v2.png" style="height: 300px; border-radius: 5px; background-color: white; margin: 0px 0px 0px 0px;" />
+                    <p style="font-size: 0.7em; ">
+                        La régression XGBoost (r2=0.941) est la meilleur si nous ne tenons pas compte de temps de calcul et si nous traitons correctement les outliers
+                    </p>
+                </section>
+                <section>
+                    <h4>Meilleur modèle pour la prédiction de consommation d'énergie</h4>
+                    <img data-src="./img/plot_energy_v2.png " style="height: 300px; border-radius: 5px; background-color: white; margin: 0px 0px 0px 0px;" />
+                    <p style="font-size: 0.7em; ">
+                        La régression XGBoost (r2=0.768) est la meilleur si nous ne tenons pas compte de temps de calcul et si nous traitons correctement les outliers
+                    </p>
+                </section>
+				<section>
+                    <h4>Pertinance de l'EnergyStar Score</h4>
+					<img data-src="./img/energy_star_logo.svg " style="height: 200px; margin: 0px 0px 0px 0px;" />
+                    <p style="font-size: 0.7em; ">
+						Pour les données de consomation energétique
+					</p>
+					<p style="font-size: 0.7em; ">
+                        Avec outliers : le r2 score passe de 0.534 à 0.620 (XGBRegressor)<br/>
+						Sans outliers : le r2 score passe de 0.768 à 0.777 (XGBRegressor)
+                    </p>
+					<p style="font-size: 0.7em; ">
+						L'EnergyStar Score semble pertinent pour la consomation d'energy
+                    </p>
+                </section>
+            </section>
+            <section>
+                <img data-src="./img/questions.png " />
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js "></script>
+    <script src="plugin/notes/notes.js "></script>
+    <script src="plugin/markdown/markdown.js "></script>
+    <script src="plugin/highlight/highlight.js "></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>
